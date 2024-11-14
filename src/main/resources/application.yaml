@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog.yaml
+  datasource:
+    url: "jdbc:postgresql://${POSTGRES_PATH}:5432/${POSTGRES_DB}"
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      pool-name: forwarder_backend
+  jpa:
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+
+ru:
+  lashnev:
+    forwarder:
+      api:
+        uri: "127.0.0.1:20000/subscriptions/"
+
+telegram:
+  bot:
+    token: ${FORWARDER_BACKEND_BOT_SECRET_KEY}

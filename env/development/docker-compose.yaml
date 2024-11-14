@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15
+    container_name: dev_telegram_forwarder_database
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: telegram_forwarder
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:

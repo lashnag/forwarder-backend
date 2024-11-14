@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: "001"
+      author: "a.lashnev"
+      changes:
+        - sqlFile:
+            path: classpath:db/changesets/001_init/create_subscriptions_table.sql
