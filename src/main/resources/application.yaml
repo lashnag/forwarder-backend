@@ -17,12 +17,6 @@ spring:
       hibernate:
         enable_lazy_load_no_trans: true
 
-ru:
-  lashnev:
-    forwarder:
-      api:
-        uri: "http://127.0.0.1:20000/subscriptions/"
-
 telegram:
   bot:
     token: ${FORWARDER_BACKEND_BOT_SECRET_KEY}

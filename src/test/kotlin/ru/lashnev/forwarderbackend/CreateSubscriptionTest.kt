@@ -9,13 +9,14 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.SendMessage
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.services.CreateSubscriptionService
-import ru.lashnev.forwarderbackend.services.GetForDeleteSubscriptionsService
-import ru.lashnev.forwarderbackend.services.SubscriptionExportService
 import kotlin.test.assertEquals
 
 class CreateSubscriptionTest : BaseIT() {
@@ -25,9 +26,6 @@ class CreateSubscriptionTest : BaseIT() {
 
     @MockBean
     private lateinit var telegramBot: TelegramBot
-
-    @MockBean
-    private lateinit var subscriptionExportService: SubscriptionExportService
 
     @Test
     fun testCreateSubscription() {

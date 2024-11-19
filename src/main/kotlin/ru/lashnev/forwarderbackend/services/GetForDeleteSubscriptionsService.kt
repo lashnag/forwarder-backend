@@ -17,7 +17,6 @@ import com.github.lashnag.telegrambotstarter.UpdatesService
 class GetForDeleteSubscriptionsService(
     private val bot: TelegramBot,
     private val subscriptionDao: SubscriptionDao,
-    private val subscriptionExportService: SubscriptionExportService
 ) : UpdatesService {
 
     override fun processUpdates(update: Update) {
@@ -64,14 +63,12 @@ class GetForDeleteSubscriptionsService(
 
     private fun deleteSubscriberButtonClicked(callbackQuery: CallbackQuery) {
         subscriptionDao.deleteSubscriber(callbackQuery.from().username())
-        subscriptionExportService.deleteSubscriber(callbackQuery.from().username())
         sendText(callbackQuery.from().id(), DELETED)
     }
 
     private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().replace(deleteSubscription.callbackData!!, "")
         subscriptionDao.deleteSubscription(callbackQuery.from().username(), subscription)
-        subscriptionExportService.deleteSubscription(callbackQuery.from().username(), subscription)
         sendText(callbackQuery.from().id(), DELETED)
     }
 
@@ -79,7 +76,6 @@ class GetForDeleteSubscriptionsService(
         val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(deleteKeyword.callbackData!!)
         val keyword = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
         subscriptionDao.deleteKeyword(callbackQuery.from().username(), subscription, keyword)
-        subscriptionExportService.deleteKeyword(callbackQuery.from().username(), subscription, keyword)
         sendText(callbackQuery.from().id(), DELETED)
     }
 

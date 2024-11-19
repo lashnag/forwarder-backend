@@ -19,7 +19,6 @@ import com.github.lashnag.telegrambotstarter.UpdatesService
 class CreateSubscriptionService(
     private val bot: TelegramBot,
     private val subscriptionDao: SubscriptionDao,
-    private val subscriptionExportService: SubscriptionExportService,
 ) : UpdatesService {
 
     val userContext: MutableMap<Long, State> = mutableMapOf()
@@ -101,7 +100,6 @@ class CreateSubscriptionService(
             checkNotNull(state)
             val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
             subscriptionDao.addSubscription(subscription)
-            subscriptionExportService.addSubscription(subscription)
             sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
             userContext.remove(callbackQuery.from().id())
         }

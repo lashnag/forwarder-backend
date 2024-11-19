@@ -18,11 +18,11 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
     }
 
     override fun getSubscriptions(subscriber: String): Set<Subscription> {
-        val subscriptions = dsl.select().from(Subscriptions.SUBSCRIPTIONS)
+        val subscriptionRecords = dsl.select().from(Subscriptions.SUBSCRIPTIONS)
             .where(Subscriptions.SUBSCRIPTIONS.SUBSCRIBER.eq(subscriber))
             .fetch()
 
-        val groupedSubscriptions = subscriptions.groupBy(
+        val groupedSubscriptions = subscriptionRecords.groupBy(
             { it[Subscriptions.SUBSCRIPTIONS.SUBSCRIBER] to it[Subscriptions.SUBSCRIPTIONS.SUBSCRIPTION] },
             { it[Subscriptions.SUBSCRIPTIONS.KEYWORD] }
         )
@@ -59,5 +59,22 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
 
     override fun deleteAll() {
         dsl.delete(Subscriptions.SUBSCRIPTIONS).execute()
+    }
+
+    override fun getAll(): Set<Subscription> {
+        val subscriptionRecords = dsl.select().from(Subscriptions.SUBSCRIPTIONS).fetch()
+
+        val groupedSubscriptions = subscriptionRecords.groupBy(
+            { it[Subscriptions.SUBSCRIPTIONS.SUBSCRIBER] to it[Subscriptions.SUBSCRIPTIONS.SUBSCRIPTION] },
+            { it[Subscriptions.SUBSCRIPTIONS.KEYWORD] }
+        )
+
+        return groupedSubscriptions.map { (key, keywords) ->
+            Subscription(
+                subscriber = key.first,
+                subscription = key.second,
+                keywords = keywords.toSet()
+            )
+        }.toSet()
     }
 }

@@ -9,4 +9,5 @@ interface SubscriptionDao {
     fun deleteSubscription(subscriber: String, subscription: String)
     fun deleteKeyword(subscriber: String, subscription: String, keyword: String)
     fun deleteAll()
+    fun getAll(): Set<Subscription>
 }

@@ -16,7 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.services.GetForDeleteSubscriptionsService
-import ru.lashnev.forwarderbackend.services.SubscriptionExportService
 import kotlin.test.assertEquals
 
 class GetForDeleteSubscriptionsTest : BaseIT() {
@@ -26,9 +25,6 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
     @MockBean
     private lateinit var telegramBot: TelegramBot
-
-    @MockBean
-    private lateinit var subscriptionExportService: SubscriptionExportService
 
     private val user = mock(User::class.java)
     private val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
