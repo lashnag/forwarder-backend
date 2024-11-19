@@ -45,18 +45,18 @@ class GetForDeleteSubscriptionsService(
             val buttons = InlineKeyboardMarkup()
             subscriptions.forEach { subscription ->
                 buttons.addRow(
-                    InlineKeyboardButton("Удалить " + subscription.subscription)
+                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.subscription}")
                         .callbackData("${deleteSubscription.callbackData}${subscription.subscription}")
                 )
                 subscription.keywords.forEach { keyword ->
                     buttons.addRow(
-                        InlineKeyboardButton("Удалить $keyword")
+                        InlineKeyboardButton("$DELETE_KEYWORD_BUTTON_NAME $keyword")
                             .callbackData("${deleteSubscription.callbackData}${subscription.subscription}${deleteKeyword.callbackData}${keyword}")
                     )
                 }
             }
             buttons.addRow(deleteSubscriber)
-            sendText(telegramUser.id(), replyMarkup = buttons)
+            sendText(telegramUser.id(), YOUR_SUBSCRIPTIONS, buttons)
             return
         }
     }
@@ -69,14 +69,14 @@ class GetForDeleteSubscriptionsService(
     private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().replace(deleteSubscription.callbackData!!, "")
         subscriptionDao.deleteSubscription(callbackQuery.from().username(), subscription)
-        sendText(callbackQuery.from().id(), DELETED)
+        sendText(callbackQuery.from().id(), "$DELETED $subscription")
     }
 
     private fun deleteKeywordButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(deleteKeyword.callbackData!!)
         val keyword = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
         subscriptionDao.deleteKeyword(callbackQuery.from().username(), subscription, keyword)
-        sendText(callbackQuery.from().id(), DELETED)
+        sendText(callbackQuery.from().id(), "$DELETED $keyword")
     }
 
     private fun sendText(who: Long, what: String? = null, replyMarkup: Keyboard? = null) {
@@ -97,9 +97,12 @@ class GetForDeleteSubscriptionsService(
         private val logger = logger()
 
         val deleteSubscriber: InlineKeyboardButton = InlineKeyboardButton("Удалить все подписки").callbackData("delete-all")
-        val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("delete-subscription-")
-        val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-delete-keyword-")
+        val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("ds-")
+        val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-dk-")
 
         const val DELETED = "Удалено"
+        const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить группу: "
+        const val DELETE_KEYWORD_BUTTON_NAME = "Удалить слово: "
+        const val YOUR_SUBSCRIPTIONS = "Ваши подписки"
     }
 }
