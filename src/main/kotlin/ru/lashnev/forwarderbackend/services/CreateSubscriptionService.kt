@@ -73,7 +73,7 @@ class CreateSubscriptionService(
         }
     }
 
-    fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null) {
+    private fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null) {
         logger.info("Send: what $what, who $who")
         val smBuilder = com.pengrad.telegrambot.request.SendMessage(who, what)
         if (replyMarkup != null) {
@@ -125,7 +125,7 @@ class CreateSubscriptionService(
         handleError(msg.from().id()) {
             sendText(
                 msg.from().id(),
-                userState.toString(),
+                CHOOSE_ACTION,
                 replyMarkup = InlineKeyboardMarkup()
                     .addRow(moreButton)
                     .addRow(subscribeButton)
@@ -155,6 +155,7 @@ class CreateSubscriptionService(
         const val ENTER_GROUP_NAME = "Введите публичный логин группы"
         const val ENTER_KEYWORD = "Введите ключевые слова"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
+        const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"
     }
 }
