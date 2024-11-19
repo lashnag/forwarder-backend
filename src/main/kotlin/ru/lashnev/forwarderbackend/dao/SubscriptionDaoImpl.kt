@@ -1,11 +1,11 @@
 package ru.lashnev.forwarderbackend.dao
 
 import org.jooq.DSLContext
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Repository
 import ru.lashnev.forwarderbackend.dao.generated.Subscriptions
 import ru.lashnev.forwarderbackend.models.Subscription
 
-@Service
+@Repository
 class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
     override fun addSubscription(subscription: Subscription) {
         subscription.keywords.forEach { keyword ->
@@ -55,5 +55,9 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
             .and(Subscriptions.SUBSCRIPTIONS.SUBSCRIPTION.eq(subscription))
             .and(Subscriptions.SUBSCRIPTIONS.KEYWORD.eq(keyword))
             .execute()
+    }
+
+    override fun deleteAll() {
+        dsl.delete(Subscriptions.SUBSCRIPTIONS).execute()
     }
 }

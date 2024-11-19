@@ -31,7 +31,7 @@
 		<kotlin.version>2.0.21</kotlin.version>
 		<jooq.version>3.19.0</jooq.version>
 		<java-telegram-bot-api.version>7.9.1</java-telegram-bot-api.version>
-		<telegram-bot-starter.version>v1.0.5</telegram-bot-starter.version>
+		<telegram-bot-starter.version>v1.0.9</telegram-bot-starter.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -70,11 +70,6 @@
 			<version>${telegram-bot-starter.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.pengrad</groupId>
-			<artifactId>java-telegram-bot-api</artifactId>
-			<version>${java-telegram-bot-api.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.jooq</groupId>
 			<artifactId>jooq</artifactId>
 			<version>${jooq.version}</version>
@@ -93,6 +88,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

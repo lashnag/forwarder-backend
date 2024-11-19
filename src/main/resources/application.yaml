@@ -21,7 +21,7 @@ ru:
   lashnev:
     forwarder:
       api:
-        uri: "127.0.0.1:20000/subscriptions/"
+        uri: "http://127.0.0.1:20000/subscriptions/"
 
 telegram:
   bot:

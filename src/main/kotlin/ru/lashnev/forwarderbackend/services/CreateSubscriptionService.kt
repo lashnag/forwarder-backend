@@ -13,7 +13,7 @@ import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.Subscription
 import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.logger
-import ru.lashnev.telegrambotstarter.UpdatesService
+import com.github.lashnag.telegrambotstarter.UpdatesService
 
 @Service
 class CreateSubscriptionService(
@@ -23,10 +23,6 @@ class CreateSubscriptionService(
 ) : UpdatesService {
 
     val userContext: MutableMap<Long, State> = mutableMapOf()
-
-    val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще слова").callbackData("more")
-    val subscribeButton: InlineKeyboardButton = InlineKeyboardButton("Подписаться").callbackData("subscribe")
-    val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
 
     enum class ProcessStage {
         ENTER_SUBSCRIPTION,
@@ -38,7 +34,7 @@ class CreateSubscriptionService(
         var stage: ProcessStage,
         var subscriber: String,
         var subscription: String? = null,
-        var keywords: Set<String> = mutableSetOf(),
+        var keywords: MutableSet<String> = mutableSetOf(),
     )
 
     override fun processUpdates(update: Update) {
@@ -47,7 +43,7 @@ class CreateSubscriptionService(
         }
     }
 
-    fun onUpdateReceived(update: Update) {
+    private fun onUpdateReceived(update: Update) {
         if (update.callbackQuery() != null) {
             val buttonCallBack: CallbackQuery = update.callbackQuery()
             if (buttonCallBack.data() == moreButton.callbackData) {
@@ -64,7 +60,7 @@ class CreateSubscriptionService(
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
             userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, msg.from().username())
-            sendText(telegramUser.id(), "Введите публичный логин группы")
+            sendText(telegramUser.id(), ENTER_GROUP_NAME)
             return
         }
 
@@ -94,7 +90,7 @@ class CreateSubscriptionService(
 
     private fun moreButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            sendText(callbackQuery.from().id(), "Введите ключевые слова")
+            sendText(callbackQuery.from().id(), ENTER_KEYWORD)
             userContext[callbackQuery.from().id()]?.stage = ProcessStage.ENTER_KEYWORD
         }
     }
@@ -106,7 +102,7 @@ class CreateSubscriptionService(
             val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
             subscriptionDao.addSubscription(subscription)
             subscriptionExportService.addSubscription(subscription)
-            sendText(callbackQuery.from().id(), "Вы подписались")
+            sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
             userContext.remove(callbackQuery.from().id())
         }
     }
@@ -114,14 +110,14 @@ class CreateSubscriptionService(
 
     private fun cancelButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            sendText(callbackQuery.from().id(), "Отменено")
+            sendText(callbackQuery.from().id(), SUBSCRIPTION_CANCELED)
             userContext.remove(callbackQuery.from().id())
         }
     }
 
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            sendText(msg.from().id(), "Введите ключевые слова")
+            sendText(msg.from().id(), ENTER_KEYWORD)
             userState.subscription = msg.text()
             userState.stage = ProcessStage.ENTER_KEYWORD
         }
@@ -137,7 +133,7 @@ class CreateSubscriptionService(
                     .addRow(subscribeButton)
                     .addRow(cancelButton)
             )
-            userState.keywords.plus(msg.text())
+            userState.keywords.add(msg.text())
             userState.stage = ProcessStage.CONFIRMATION
         }
     }
@@ -153,5 +149,14 @@ class CreateSubscriptionService(
 
     companion object {
         private val logger = logger()
+
+        val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще слова").callbackData("more")
+        val subscribeButton: InlineKeyboardButton = InlineKeyboardButton("Подписаться").callbackData("subscribe")
+        val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
+
+        const val ENTER_GROUP_NAME = "Введите публичный логин группы"
+        const val ENTER_KEYWORD = "Введите ключевые слова"
+        const val SUBSCRIPTION_SUCCESS = "Вы подписались"
+        const val SUBSCRIPTION_CANCELED = "Отменено"
     }
 }
