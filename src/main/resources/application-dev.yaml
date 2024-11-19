@@ -8,9 +8,12 @@ spring:
     username: test
     password: test
 
-ru:
-  lashnev:
-    forwarder:
-      bot:
-        secret-key: 6124920031:AAEKLWgXC1J_7R-tgn79PRfO3PA-oBKDNcg
-        user-name: "DevForwarderBackendBot"
+telegram-bot-starter:
+  bot:
+    token: YOUR_TEST_BOT_TOKEN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: beans

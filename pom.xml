@@ -31,7 +31,7 @@
 		<kotlin.version>2.0.21</kotlin.version>
 		<jooq.version>3.19.0</jooq.version>
 		<java-telegram-bot-api.version>7.9.1</java-telegram-bot-api.version>
-		<telegram-bot-starter.version>v1.0.9</telegram-bot-starter.version>
+		<telegram-bot-starter.version>v1.0.20</telegram-bot-starter.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -41,6 +41,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
