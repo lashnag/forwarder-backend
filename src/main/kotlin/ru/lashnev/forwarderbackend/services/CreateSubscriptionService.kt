@@ -14,11 +14,13 @@ import ru.lashnev.forwarderbackend.models.Subscription
 import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.logger
 import com.github.lashnag.telegrambotstarter.UpdatesService
+import org.springframework.beans.factory.annotation.Value
 
 @Service
 class CreateSubscriptionService(
     private val bot: TelegramBot,
     private val subscriptionDao: SubscriptionDao,
+    @Value("\${telegram-forwarder-user}") private val telegramForwarderUser: String
 ) : UpdatesService {
 
     val userContext: MutableMap<Long, State> = mutableMapOf()
@@ -100,7 +102,7 @@ class CreateSubscriptionService(
             checkNotNull(state)
             val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
             subscriptionDao.addSubscription(subscription)
-            sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
+            sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
             userContext.remove(callbackQuery.from().id())
         }
     }

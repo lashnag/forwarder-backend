@@ -8,9 +8,10 @@ spring:
     username: test
     password: test
 
+telegram-forwarder-user: resenderuser
 telegram-bot-starter:
   bot:
-    token: YOUR_TEST_BOT_TOKEN
+    token: 7596219963:AAFTEgB5XXQ8E_xsLLWL_1JYghH-xqwHhgE
 
 management:
   endpoints:

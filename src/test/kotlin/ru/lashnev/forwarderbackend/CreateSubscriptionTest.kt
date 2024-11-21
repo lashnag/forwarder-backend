@@ -18,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.services.CreateSubscriptionService
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CreateSubscriptionTest : BaseIT() {
 
@@ -102,7 +103,7 @@ class CreateSubscriptionTest : BaseIT() {
 
         createSubscriptionService.processUpdates(createUpdateSave)
         verify(telegramBot, times(6)).execute(captor.capture())
-        assertEquals(CreateSubscriptionService.SUBSCRIPTION_SUCCESS, captor.value.entities().parameters["text"])
+        assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.SUBSCRIPTION_SUCCESS))
 
         val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
         assertEquals(1, savedSubscriptions.size)
