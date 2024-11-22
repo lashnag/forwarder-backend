@@ -101,8 +101,17 @@ class CreateSubscriptionService(
             val state = userContext[callbackQuery.from().id()]
             checkNotNull(state)
             val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
-            subscriptionDao.addSubscription(subscription)
-            sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
+            val existedSubscriptions = subscriptionDao.getSubscriptions(state.subscriber)
+            val intersectedSubscriptions = existedSubscriptions.filter {
+                it.subscriber == state.subscriber && it.subscription == state.subscription!! && it.keywords.intersect(state.keywords).isNotEmpty()
+            }
+
+            if (intersectedSubscriptions.isEmpty()) {
+                subscriptionDao.addSubscription(subscription)
+                sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
+            } else {
+                sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().subscription}")
+            }
             userContext.remove(callbackQuery.from().id())
         }
     }
@@ -159,5 +168,6 @@ class CreateSubscriptionService(
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"
+        const val ALREADY_EXISTED_SUBSCRIPTION = "Такая подписка уже есть в"
     }
 }

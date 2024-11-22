@@ -7,6 +7,7 @@ import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.User
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.SendMessage
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.`when`
@@ -15,6 +16,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.jdbc.Sql
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.services.CreateSubscriptionService
 import kotlin.test.assertEquals
@@ -28,19 +30,23 @@ class CreateSubscriptionTest : BaseIT() {
     @MockBean
     private lateinit var telegramBot: TelegramBot
 
+    private val user = mock(User::class.java)
+    private val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
+
+    @BeforeEach
+    fun setUp() {
+        `when`(user.id()).thenReturn(1)
+        `when`(user.username()).thenReturn("lashnag")
+    }
+
     @Test
     fun testCreateSubscription() {
-        val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
-
         // request to create subscription
-        val user = mock(User::class.java)
         val messageCreateSubscription = mock(Message::class.java)
         val createUpdate = mock(Update::class.java)
         `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
         `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
         `when`(messageCreateSubscription.from()).thenReturn(user)
-        `when`(user.id()).thenReturn(1)
-        `when`(user.username()).thenReturn("lashnag")
 
         createSubscriptionService.processUpdates(createUpdate)
         verify(telegramBot).execute(captor.capture())
@@ -108,5 +114,50 @@ class CreateSubscriptionTest : BaseIT() {
         val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
         assertEquals(1, savedSubscriptions.size)
         assertEquals(2, savedSubscriptions.first().keywords.size)
+    }
+
+    @Test
+    @Sql("/sql/subscriptions.sql")
+    fun testCreateAlreadyExistedSubscription() {
+        // request to create subscription
+        val messageCreateSubscription = mock(Message::class.java)
+        val createUpdate = mock(Update::class.java)
+        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
+        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        `when`(messageCreateSubscription.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdate)
+
+        // enter subscription name
+        val messageCreateSubscriptionEnterExistedSubscription = mock(Message::class.java)
+        val createUpdateEnterExistedSubscription = mock(Update::class.java)
+        `when`(createUpdateEnterExistedSubscription.message()).thenReturn(messageCreateSubscriptionEnterExistedSubscription)
+        `when`(messageCreateSubscriptionEnterExistedSubscription.text()).thenReturn("samokatus")
+        `when`(messageCreateSubscriptionEnterExistedSubscription.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdateEnterExistedSubscription)
+
+        // enter existed keyword
+        val messageCreateSubscriptionEnterExistedKeyword = mock(Message::class.java)
+        val createUpdateEnterExistedKeyword = mock(Update::class.java)
+        `when`(createUpdateEnterExistedKeyword.message()).thenReturn(messageCreateSubscriptionEnterExistedKeyword)
+        `when`(messageCreateSubscriptionEnterExistedKeyword.text()).thenReturn("казань")
+        `when`(messageCreateSubscriptionEnterExistedKeyword.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdateEnterExistedKeyword)
+        verify(telegramBot, times(3)).execute(captor.capture())
+        val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+
+        // save subscription entered
+        val callbackQuerySave = mock(CallbackQuery::class.java)
+        val createUpdateSave = mock(Update::class.java)
+        `when`(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
+        val buttonSubscribe = buttons[1][0]
+        `when`(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
+        `when`(callbackQuerySave.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdateSave)
+        verify(telegramBot, times(4)).execute(captor.capture())
+        assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.ALREADY_EXISTED_SUBSCRIPTION))
     }
 }
