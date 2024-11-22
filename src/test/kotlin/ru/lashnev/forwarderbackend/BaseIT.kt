@@ -1,6 +1,12 @@
 package ru.lashnev.forwarderbackend
 
+import com.pengrad.telegrambot.model.User
+import com.pengrad.telegrambot.request.SendMessage
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.mockito.ArgumentCaptor
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -16,12 +22,24 @@ class BaseIT {
     @Autowired
     protected lateinit var subscriptionDao: SubscriptionDao
 
+    protected val user = mock(User::class.java)
+    protected val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
+
+    @BeforeEach
+    fun setUp() {
+        `when`(user.id()).thenReturn(1)
+        `when`(user.username()).thenReturn(testUsername)
+    }
+
     @AfterEach
     fun clearDb() {
         subscriptionDao.deleteAll()
     }
 
     companion object {
+        @JvmStatic
+        protected val testUsername = "lashnag"
+
         private val postgreSQLContainer = PostgreSQLContainer("postgres:latest")
             .withDatabaseName("telegram_forwarder")
             .withUsername("test")

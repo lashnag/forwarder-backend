@@ -4,13 +4,12 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
-import com.pengrad.telegrambot.model.User
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
-import com.pengrad.telegrambot.request.SendMessage
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
@@ -25,15 +24,6 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
     @MockBean
     private lateinit var telegramBot: TelegramBot
-
-    private val user = mock(User::class.java)
-    private val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
-
-    @BeforeEach
-    fun setUp() {
-        `when`(user.id()).thenReturn(1)
-        `when`(user.username()).thenReturn("lashnag")
-    }
 
     @Test
     @Sql("/sql/subscriptions.sql")
@@ -58,7 +48,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
+        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
         assertEquals(0, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
         assertEquals(GetForDeleteSubscriptionsService.DELETED, captor.value.entities().parameters["text"])
@@ -87,7 +77,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
+        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
         assertEquals(1, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
         assertEquals(GetForDeleteSubscriptionsService.DELETED, captor.value.entities().parameters["text"])
@@ -116,7 +106,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteSamokatusKazanKeywordUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
+        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
         assertEquals(2, savedSubscriptions.size)
         assertEquals(1, savedSubscriptions.first().keywords.size)
         verify(telegramBot, times(2)).execute(captor.capture())
