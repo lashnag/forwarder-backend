@@ -159,5 +159,9 @@ class CreateSubscriptionTest : BaseIT() {
         createSubscriptionService.processUpdates(createUpdateSave)
         verify(telegramBot, times(4)).execute(captor.capture())
         assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.ALREADY_EXISTED_SUBSCRIPTION))
+
+        val savedSubscriptions = subscriptionDao.getSubscriptions("lashnag")
+        assertEquals(2, savedSubscriptions.size)
+        assertEquals(2, savedSubscriptions.first().keywords.size)
     }
 }
