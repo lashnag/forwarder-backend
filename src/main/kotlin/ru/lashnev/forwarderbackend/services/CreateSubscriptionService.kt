@@ -127,7 +127,7 @@ class CreateSubscriptionService(
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
             sendText(msg.from().id(), ENTER_KEYWORD, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
-            userState.subscription = msg.text().replace("@", "")
+            userState.subscription = msg.text().replace(DOMAIN_IN_TELEGRAM_LINK, "")
             userState.stage = ProcessStage.ENTER_KEYWORD
         }
     }
@@ -163,7 +163,8 @@ class CreateSubscriptionService(
         val subscribeButton: InlineKeyboardButton = InlineKeyboardButton("Подписаться").callbackData("subscribe")
         val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
 
-        const val ENTER_GROUP_NAME = "Введите публичный логин группы с @"
+        const val DOMAIN_IN_TELEGRAM_LINK = "https://t.me/"
+        const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}username)"
         const val ENTER_KEYWORD = "Введите ключевые слова"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
