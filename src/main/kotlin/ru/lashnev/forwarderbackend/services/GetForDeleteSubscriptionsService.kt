@@ -45,7 +45,7 @@ class GetForDeleteSubscriptionsService(
             val buttons = InlineKeyboardMarkup()
             subscriptions.forEach { subscription ->
                 buttons.addRow(
-                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.subscription}")
+                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME${subscription.subscription}")
                         .callbackData("${deleteSubscription.callbackData}${subscription.subscription}")
                 )
                 subscription.keywords.forEach { keyword ->
