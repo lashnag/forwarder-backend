@@ -61,7 +61,7 @@ class CreateSubscriptionService(
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
             userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, msg.from().username())
-            sendText(telegramUser.id(), ENTER_GROUP_NAME)
+            sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             return
         }
 
@@ -126,7 +126,7 @@ class CreateSubscriptionService(
 
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            sendText(msg.from().id(), ENTER_KEYWORD)
+            sendText(msg.from().id(), ENTER_KEYWORD, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             userState.subscription = msg.text().replace("@", "")
             userState.stage = ProcessStage.ENTER_KEYWORD
         }
