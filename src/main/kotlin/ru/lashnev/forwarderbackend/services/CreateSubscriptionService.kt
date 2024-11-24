@@ -164,7 +164,7 @@ class CreateSubscriptionService(
         val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
 
         const val DOMAIN_IN_TELEGRAM_LINK = "https://t.me/"
-        const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}username)"
+        const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username)"
         const val ENTER_KEYWORD = "Введите ключевые слова"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
