@@ -43,7 +43,7 @@ class CreateSubscriptionTest : BaseIT() {
         val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
         val createUpdateEnterSubscription = mock(Update::class.java)
         `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("samokatus")
+        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("@samokatus")
         `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterSubscription)
