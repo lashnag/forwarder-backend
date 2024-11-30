@@ -1,6 +1,8 @@
 package ru.lashnev.forwarderbackend.models
 
 enum class AdminCommand(val commandName: String) {
+    START("/start"),
+    CHANGELOG("/changelog"),
     CREATE_SUBSCRIPTION("/create_subscription"),
     FETCH_SUBSCRIPTIONS("/fetch_subscriptions"),
     UNKNOWN_COMMAND("unknown");

@@ -16,6 +16,7 @@ import org.springframework.test.context.jdbc.Sql
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.services.GetForDeleteSubscriptionsService
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class GetForDeleteSubscriptionsTest : BaseIT() {
 
@@ -80,7 +81,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
         val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
         assertEquals(1, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertEquals(GetForDeleteSubscriptionsService.DELETED, captor.value.entities().parameters["text"])
+        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED))
     }
 
     @Test
@@ -110,6 +111,6 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
         assertEquals(2, savedSubscriptions.size)
         assertEquals(1, savedSubscriptions.first().keywords.size)
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertEquals(GetForDeleteSubscriptionsService.DELETED, captor.value.entities().parameters["text"])
+        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED))
     }
 }

@@ -1,12 +1,10 @@
 package ru.lashnev.forwarderbackend.services
 
-import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
-import com.pengrad.telegrambot.model.request.Keyboard
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.models.AdminCommand
@@ -15,11 +13,12 @@ import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.logger
 import com.github.lashnag.telegrambotstarter.UpdatesService
 import org.springframework.beans.factory.annotation.Value
+import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
 class CreateSubscriptionService(
-    private val bot: TelegramBot,
     private val subscriptionDao: SubscriptionDao,
+    private val sendTextUtilService: SendTextUtilService,
     @Value("\${telegram-forwarder-user}") private val telegramForwarderUser: String
 ) : UpdatesService {
 
@@ -61,7 +60,7 @@ class CreateSubscriptionService(
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
             userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, msg.from().username())
-            sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
+            sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             return
         }
 
@@ -75,23 +74,9 @@ class CreateSubscriptionService(
         }
     }
 
-    private fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null) {
-        logger.info("Send: what $what, who $who")
-        val smBuilder = com.pengrad.telegrambot.request.SendMessage(who, what)
-        if (replyMarkup != null) {
-            smBuilder.replyMarkup(replyMarkup)
-        }
-
-        try {
-            bot.execute(smBuilder)
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
-    }
-
     private fun moreButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            sendText(callbackQuery.from().id(), ENTER_KEYWORD)
+            sendTextUtilService.sendText(callbackQuery.from().id(), ENTER_KEYWORD)
             userContext[callbackQuery.from().id()]?.stage = ProcessStage.ENTER_KEYWORD
         }
     }
@@ -108,9 +93,9 @@ class CreateSubscriptionService(
 
             if (intersectedSubscriptions.isEmpty()) {
                 subscriptionDao.addSubscription(subscription)
-                sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
+                sendTextUtilService.sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
             } else {
-                sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().subscription}")
+                sendTextUtilService.sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().subscription}")
             }
             userContext.remove(callbackQuery.from().id())
         }
@@ -119,14 +104,14 @@ class CreateSubscriptionService(
 
     private fun cancelButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            sendText(callbackQuery.from().id(), SUBSCRIPTION_CANCELED)
+            sendTextUtilService.sendText(callbackQuery.from().id(), SUBSCRIPTION_CANCELED)
             userContext.remove(callbackQuery.from().id())
         }
     }
 
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            sendText(msg.from().id(), ENTER_KEYWORD, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
+            sendTextUtilService.sendText(msg.from().id(), ENTER_KEYWORD, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             userState.subscription = msg.text().replace(DOMAIN_IN_TELEGRAM_LINK, "")
             userState.stage = ProcessStage.ENTER_KEYWORD
         }
@@ -134,7 +119,7 @@ class CreateSubscriptionService(
 
     private fun keywordEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            sendText(
+            sendTextUtilService.sendText(
                 msg.from().id(),
                 CHOOSE_ACTION,
                 replyMarkup = InlineKeyboardMarkup()
@@ -152,7 +137,7 @@ class CreateSubscriptionService(
             block()
         } catch (e: Exception) {
             logger.error("Exception in AdminBot ${e.message}", e)
-            sendText(chatId, "Произошла ошибка попробуйте еще раз")
+            sendTextUtilService.sendText(chatId, "Произошла ошибка попробуйте еще раз")
         }
     }
 
@@ -165,7 +150,7 @@ class CreateSubscriptionService(
 
         const val DOMAIN_IN_TELEGRAM_LINK = "https://t.me/"
         const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username)"
-        const val ENTER_KEYWORD = "Введите ключевые слова"
+        const val ENTER_KEYWORD = "Введите ключевые слова (несколько слов через пробел если они все должны присутствовать в сообщении)"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"

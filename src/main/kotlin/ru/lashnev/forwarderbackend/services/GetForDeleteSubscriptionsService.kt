@@ -1,21 +1,19 @@
 package ru.lashnev.forwarderbackend.services
 
-import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
-import com.pengrad.telegrambot.model.request.Keyboard
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.toCommand
-import ru.lashnev.forwarderbackend.utils.logger
 import com.github.lashnag.telegrambotstarter.UpdatesService
+import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
 class GetForDeleteSubscriptionsService(
-    private val bot: TelegramBot,
+    private val sendTextUtilService: SendTextUtilService,
     private val subscriptionDao: SubscriptionDao,
 ) : UpdatesService {
 
@@ -56,46 +54,30 @@ class GetForDeleteSubscriptionsService(
                 }
             }
             buttons.addRow(deleteSubscriber)
-            sendText(telegramUser.id(), YOUR_SUBSCRIPTIONS, buttons)
+            sendTextUtilService.sendText(telegramUser.id(), YOUR_SUBSCRIPTIONS, buttons)
             return
         }
     }
 
     private fun deleteSubscriberButtonClicked(callbackQuery: CallbackQuery) {
         subscriptionDao.deleteSubscriber(callbackQuery.from().username())
-        sendText(callbackQuery.from().id(), DELETED)
+        sendTextUtilService.sendText(callbackQuery.from().id(), DELETED)
     }
 
     private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().replace(deleteSubscription.callbackData!!, "")
         subscriptionDao.deleteSubscription(callbackQuery.from().username(), subscription)
-        sendText(callbackQuery.from().id(), "$DELETED $subscription")
+        sendTextUtilService.sendText(callbackQuery.from().id(), "$DELETED $subscription")
     }
 
     private fun deleteKeywordButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(deleteKeyword.callbackData!!)
         val keyword = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
         subscriptionDao.deleteKeyword(callbackQuery.from().username(), subscription, keyword)
-        sendText(callbackQuery.from().id(), "$DELETED $keyword")
-    }
-
-    private fun sendText(who: Long, what: String? = null, replyMarkup: Keyboard? = null) {
-        logger.info("Send: what $what, who $who")
-        val smBuilder = com.pengrad.telegrambot.request.SendMessage(who, what)
-        if (replyMarkup != null) {
-            smBuilder.replyMarkup(replyMarkup)
-        }
-
-        try {
-            bot.execute(smBuilder)
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
+        sendTextUtilService.sendText(callbackQuery.from().id(), "$DELETED $keyword")
     }
 
     companion object {
-        private val logger = logger()
-
         val deleteSubscriber: InlineKeyboardButton = InlineKeyboardButton("Удалить все подписки").callbackData("delete-all")
         val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("ds-")
         val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-dk-")
