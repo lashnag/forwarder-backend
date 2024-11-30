@@ -12,6 +12,6 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY --from=build /app/target/ForwarderBackend-0.0.1-SNAPSHOT.jar ForwarderBackend.jar
+COPY --from=build /app/target/ForwarderBackend-1.0.1.jar ForwarderBackend.jar
 
 ENTRYPOINT ["sh", "-c", "sleep 30; exec java -jar ForwarderBackend.jar"]
