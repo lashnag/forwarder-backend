@@ -43,7 +43,7 @@ class CreateSubscriptionTest : BaseIT() {
         val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
         val createUpdateEnterSubscription = mock(Update::class.java)
         `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("@samokatus")
+        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn(VALID_GROUP_NAME)
         `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterSubscription)
@@ -119,7 +119,7 @@ class CreateSubscriptionTest : BaseIT() {
         val messageCreateSubscriptionEnterExistedSubscription = mock(Message::class.java)
         val createUpdateEnterExistedSubscription = mock(Update::class.java)
         `when`(createUpdateEnterExistedSubscription.message()).thenReturn(messageCreateSubscriptionEnterExistedSubscription)
-        `when`(messageCreateSubscriptionEnterExistedSubscription.text()).thenReturn("samokatus")
+        `when`(messageCreateSubscriptionEnterExistedSubscription.text()).thenReturn(VALID_GROUP_NAME)
         `when`(messageCreateSubscriptionEnterExistedSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterExistedSubscription)
@@ -167,7 +167,7 @@ class CreateSubscriptionTest : BaseIT() {
         val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
         val createUpdateEnterSubscription = mock(Update::class.java)
         `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("samokatus")
+        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn(VALID_GROUP_NAME)
         `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterSubscription)
@@ -197,5 +197,32 @@ class CreateSubscriptionTest : BaseIT() {
 
         val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
         assertEquals(0, savedSubscriptions.size)
+    }
+
+    @Test
+    fun testCreateSubscriptionWithWrongNameNeedToRetry() {
+        // request to create subscription
+        val messageCreateSubscription = mock(Message::class.java)
+        val createUpdate = mock(Update::class.java)
+        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
+        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        `when`(messageCreateSubscription.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdate)
+
+        // enter subscription name
+        val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
+        val createUpdateEnterSubscription = mock(Update::class.java)
+        `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
+        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("invalid_group_name")
+        `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createUpdateEnterSubscription)
+        verify(telegramBot, times(2)).execute(captor.capture())
+        assertEquals(captor.value.entities().parameters["text"], CreateSubscriptionService.ERROR_GROUP_FORMAT)
+    }
+
+    companion object {
+        const val VALID_GROUP_NAME = "https://t.me/samokatus"
     }
 }

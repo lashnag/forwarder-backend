@@ -15,7 +15,7 @@ class SubscriptionsController(private val subscriptionExportService: Subscriptio
         val allSubscriptions = subscriptionExportService.getAllSubscriptions()
         return allSubscriptions.flatMap { subscription ->
             subscription.keywords.map { keyword ->
-                SubscriptionRawDto(subscription.subscriber, subscription.subscription, keyword)
+                SubscriptionRawDto(subscription.subscriber, subscription.subscription, keyword.value)
             }
         }.toSet()
     }

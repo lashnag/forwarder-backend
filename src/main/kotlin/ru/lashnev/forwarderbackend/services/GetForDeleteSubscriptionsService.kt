@@ -48,8 +48,8 @@ class GetForDeleteSubscriptionsService(
                 )
                 subscription.keywords.forEach { keyword ->
                     buttons.addRow(
-                        InlineKeyboardButton("$DELETE_KEYWORD_BUTTON_NAME $keyword")
-                            .callbackData("${deleteSubscription.callbackData}${subscription.subscription}${deleteKeyword.callbackData}${keyword}")
+                        InlineKeyboardButton("$DELETE_KEYWORD_BUTTON_NAME ${keyword.value}")
+                            .callbackData("${deleteSubscription.callbackData}${subscription.subscription}${deleteKeyword.callbackData}${keyword.subscriptionId}")
                     )
                 }
             }
@@ -72,9 +72,9 @@ class GetForDeleteSubscriptionsService(
 
     private fun deleteKeywordButtonClicked(callbackQuery: CallbackQuery) {
         val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(deleteKeyword.callbackData!!)
-        val keyword = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
-        subscriptionDao.deleteKeyword(callbackQuery.from().username(), subscription, keyword)
-        sendTextUtilService.sendText(callbackQuery.from().id(), "$DELETED $keyword")
+        val keywordSubscriptionId = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
+        subscriptionDao.deleteKeyword(callbackQuery.from().username(), keywordSubscriptionId.toInt())
+        sendTextUtilService.sendText(callbackQuery.from().id(), DELETED_KEYWORD + subscription)
     }
 
     companion object {
@@ -83,6 +83,7 @@ class GetForDeleteSubscriptionsService(
         val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-dk-")
 
         const val DELETED = "Удалено"
+        const val DELETED_KEYWORD = "Удалено ключевое слово из группы "
         const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить группу: @"
         const val DELETE_KEYWORD_BUTTON_NAME = "Удалить слово: "
         const val YOUR_SUBSCRIPTIONS = "Ваши подписки"

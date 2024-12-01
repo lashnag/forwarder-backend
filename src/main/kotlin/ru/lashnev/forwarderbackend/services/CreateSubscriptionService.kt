@@ -13,6 +13,7 @@ import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.logger
 import com.github.lashnag.telegrambotstarter.UpdatesService
 import org.springframework.beans.factory.annotation.Value
+import ru.lashnev.forwarderbackend.models.Keyword
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
@@ -34,7 +35,7 @@ class CreateSubscriptionService(
         var stage: ProcessStage,
         var subscriber: String,
         var subscription: String? = null,
-        var keywords: MutableSet<String> = mutableSetOf(),
+        var keywords: MutableSet<Keyword> = mutableSetOf(),
     )
 
     override fun processUpdates(update: Update) {
@@ -88,7 +89,8 @@ class CreateSubscriptionService(
             val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
             val existedSubscriptions = subscriptionDao.getSubscriptions(state.subscriber)
             val intersectedSubscriptions = existedSubscriptions.filter {
-                it.subscriber == state.subscriber && it.subscription == state.subscription!! && it.keywords.intersect(state.keywords).isNotEmpty()
+                it.subscriber == state.subscriber && it.subscription == state.subscription!! && it.keywords.map { it.value }
+                    .intersect(state.keywords.map { it.value }).isNotEmpty()
             }
 
             if (intersectedSubscriptions.isEmpty()) {
@@ -111,11 +113,23 @@ class CreateSubscriptionService(
 
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            sendTextUtilService.sendText(msg.from().id(), ENTER_KEYWORD, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
-            userState.subscription = msg.text()
-                .replace(DOMAIN_IN_TELEGRAM_LINK, "")
-                .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
-            userState.stage = ProcessStage.ENTER_KEYWORD
+            if(msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) || msg.text().contains(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
+                userState.subscription = msg.text()
+                    .replace(DOMAIN_IN_TELEGRAM_LINK, "")
+                    .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
+                    .replace(DOMAIN_WEB_TELEGRAM_LINK, "")
+                userState.stage = ProcessStage.ENTER_KEYWORD
+                sendTextUtilService.sendText(
+                    msg.from().id(),
+                    ENTER_KEYWORD,
+                    replyMarkup = InlineKeyboardMarkup().addRow(cancelButton)
+                )
+            } else {
+                sendTextUtilService.sendText(
+                    msg.from().id(),
+                    ERROR_GROUP_FORMAT
+                )
+            }
         }
     }
 
@@ -129,7 +143,7 @@ class CreateSubscriptionService(
                     .addRow(subscribeButton)
                     .addRow(cancelButton)
             )
-            userState.keywords.add(msg.text())
+            userState.keywords.add(Keyword(value = msg.text()))
             userState.stage = ProcessStage.CONFIRMATION
         }
     }
@@ -146,14 +160,16 @@ class CreateSubscriptionService(
     companion object {
         private val logger = logger()
 
-        val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще слова").callbackData("more")
+        val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще слово").callbackData("more")
         val subscribeButton: InlineKeyboardButton = InlineKeyboardButton("Подписаться").callbackData("subscribe")
         val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
 
         const val DOMAIN_IN_TELEGRAM_LINK = "https://t.me/"
         const val DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL = "t.me/"
+        const val DOMAIN_WEB_TELEGRAM_LINK = "https://telegram.me/s/"
+        const val ERROR_GROUP_FORMAT = "Неправильный формат группы. Введите еще раз"
         const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username)"
-        const val ENTER_KEYWORD = "Введите ключевые слова (несколько слов через пробел если они все должны присутствовать в сообщении)"
+        const val ENTER_KEYWORD = "Введите ключевое слово (несколько слов через пробел если они все одновременно должны присутствовать в сообщении)"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"

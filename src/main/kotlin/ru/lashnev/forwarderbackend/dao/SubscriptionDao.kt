@@ -7,7 +7,7 @@ interface SubscriptionDao {
     fun getSubscriptions(subscriber: String): Set<Subscription>
     fun deleteSubscriber(subscriber: String)
     fun deleteSubscription(subscriber: String, subscription: String)
-    fun deleteKeyword(subscriber: String, subscription: String, keyword: String)
+    fun deleteKeyword(subscriber: String, keywordSubscriptionId: Int)
     fun deleteAll()
     fun getAll(): Set<Subscription>
 }
