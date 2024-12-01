@@ -83,7 +83,7 @@ class GetForDeleteSubscriptionsService(
         val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-dk-")
 
         const val DELETED = "Удалено"
-        const val DELETED_KEYWORD = "Удалено ключевое слово из группы "
+        const val DELETED_KEYWORD = "Удалено ключевое слово из группы @"
         const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить группу: @"
         const val DELETE_KEYWORD_BUTTON_NAME = "Удалить слово: "
         const val YOUR_SUBSCRIPTIONS = "Ваши подписки"
