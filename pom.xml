@@ -34,25 +34,11 @@
 		<telegram-bot-starter.version>v1.0.20</telegram-bot-starter.version>
 		<stanford-corenlp.version>4.5.7</stanford-corenlp.version>
 		<lemmatimizer.version>2022.11.28</lemmatimizer.version>
+
+		<db.url>jdbc:postgresql://localhost:5433/telegram_forwarder</db.url>
+		<db.user>test</db.user>
+		<db.password>test</db.password>
 	</properties>
-	<profiles>
-		<profile>
-			<id>dev</id>
-			<properties>
-				<db.url>jdbc:postgresql://localhost:5433/telegram_forwarder</db.url>
-				<db.user>test</db.user>
-				<db.password>test</db.password>
-			</properties>
-		</profile>
-		<profile>
-			<id>prod</id>
-			<properties>
-				<db.url>jdbc:postgresql://${env.POSTGRES_PATH}:5432/${env.POSTGRES_DB}</db.url>
-				<db.user>${env.POSTGRES_USER}</db.user>
-				<db.password>${env.POSTGRES_PASSWORD}</db.password>
-			</properties>
-		</profile>
-	</profiles>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
