@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN mvn jooq-codegen:generate -Pprod
 RUN mvn clean package -DskipTests
 
 # Этап выполнения
@@ -12,6 +13,6 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY --from=build /app/target/ForwarderBackend-1.0.2.jar ForwarderBackend.jar
+COPY --from=build /app/target/ForwarderBackend-2.0.0.jar ForwarderBackend.jar
 
 ENTRYPOINT ["sh", "-c", "sleep 30; exec java -jar ForwarderBackend.jar"]

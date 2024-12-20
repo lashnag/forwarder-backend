@@ -1,4 +1,4 @@
-package ru.lashnev.forwarderbackend.services
+package ru.lashnev.forwarderbackend.services.bot
 
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Update
@@ -39,17 +39,17 @@ class GetForDeleteSubscriptionsService(
         val msg = update.message()
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.FETCH_SUBSCRIPTIONS) {
-            val subscriptions = subscriptionDao.getSubscriptions(telegramUser.username())
+            val subscriptions = subscriptionDao.getSubscriptionsBySubscriber(telegramUser.username())
             val buttons = InlineKeyboardMarkup()
             subscriptions.forEach { subscription ->
                 buttons.addRow(
-                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME${subscription.subscription}")
-                        .callbackData("${deleteSubscription.callbackData}${subscription.subscription}")
+                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME${subscription.group.name}")
+                        .callbackData("${deleteSubscription.callbackData}${subscription.group.name}")
                 )
                 subscription.keywords.forEach { keyword ->
                     buttons.addRow(
                         InlineKeyboardButton("$DELETE_KEYWORD_BUTTON_NAME ${keyword.value}")
-                            .callbackData("${deleteSubscription.callbackData}${subscription.subscription}${deleteKeyword.callbackData}${keyword.subscriptionId}")
+                            .callbackData("${deleteSubscription.callbackData}${subscription.group.name}${deleteKeyword.callbackData}${keyword.keywordId}")
                     )
                 }
             }
@@ -71,7 +71,8 @@ class GetForDeleteSubscriptionsService(
     }
 
     private fun deleteKeywordButtonClicked(callbackQuery: CallbackQuery) {
-        val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(deleteKeyword.callbackData!!)
+        val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(
+            deleteKeyword.callbackData!!)
         val keywordSubscriptionId = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
         subscriptionDao.deleteKeyword(callbackQuery.from().username(), keywordSubscriptionId.toInt())
         sendTextUtilService.sendText(callbackQuery.from().id(), DELETED_KEYWORD + subscription)

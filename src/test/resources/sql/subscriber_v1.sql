@@ -1,0 +1,1 @@
+insert into subscribers (subscriber_id, username) values (1,'lashnag');

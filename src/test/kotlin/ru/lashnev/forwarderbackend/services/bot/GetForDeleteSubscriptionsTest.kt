@@ -1,4 +1,4 @@
-package ru.lashnev.forwarderbackend
+package ru.lashnev.forwarderbackend.services.bot
 
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
@@ -13,8 +13,8 @@ import org.mockito.Mockito.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
+import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.AdminCommand
-import ru.lashnev.forwarderbackend.services.GetForDeleteSubscriptionsService
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -49,7 +49,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(0, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
         assertEquals(GetForDeleteSubscriptionsService.DELETED, captor.value.entities().parameters["text"])
@@ -78,7 +78,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
         assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED))
@@ -107,7 +107,7 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         getForDeleteSubscriptionsService.processUpdates(deleteSamokatusKazanKeywordUpdate)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(2, savedSubscriptions.size)
         assertEquals(1, savedSubscriptions.first().keywords.size)
         verify(telegramBot, times(2)).execute(captor.capture())

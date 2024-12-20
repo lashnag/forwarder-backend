@@ -1,4 +1,4 @@
-package ru.lashnev.forwarderbackend
+package ru.lashnev.forwarderbackend.services.bot
 
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
@@ -13,8 +13,8 @@ import org.mockito.Mockito.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
+import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.AdminCommand
-import ru.lashnev.forwarderbackend.services.CreateSubscriptionService
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -98,7 +98,7 @@ class CreateSubscriptionTest : BaseIT() {
         verify(telegramBot, times(6)).execute(captor.capture())
         assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.SUBSCRIPTION_SUCCESS))
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
         assertEquals(2, savedSubscriptions.first().keywords.size)
     }
@@ -147,7 +147,7 @@ class CreateSubscriptionTest : BaseIT() {
         verify(telegramBot, times(4)).execute(captor.capture())
         assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.ALREADY_EXISTED_SUBSCRIPTION))
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(2, savedSubscriptions.size)
         assertEquals(2, savedSubscriptions.first().keywords.size)
     }
@@ -195,7 +195,7 @@ class CreateSubscriptionTest : BaseIT() {
         verify(telegramBot, times(4)).execute(captor.capture())
         assertEquals(captor.value.entities().parameters["text"], CreateSubscriptionService.SUBSCRIPTION_CANCELED)
 
-        val savedSubscriptions = subscriptionDao.getSubscriptions(testUsername)
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(0, savedSubscriptions.size)
     }
 

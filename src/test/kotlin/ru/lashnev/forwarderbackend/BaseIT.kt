@@ -13,6 +13,8 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
+import ru.lashnev.forwarderbackend.dao.GroupsDao
+import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 
 @SpringBootTest
@@ -21,6 +23,12 @@ class BaseIT {
 
     @Autowired
     protected lateinit var subscriptionDao: SubscriptionDao
+
+    @Autowired
+    protected lateinit var subscribersDao: SubscribersDao
+
+    @Autowired
+    protected lateinit var groupsDao: GroupsDao
 
     protected val user = mock(User::class.java)
     protected val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)

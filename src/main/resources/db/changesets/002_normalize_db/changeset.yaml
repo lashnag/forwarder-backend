@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: "002"
+      author: "a.lashnev"
+      changes:
+        - sqlFile:
+            path: classpath:db/changesets/002_normalize_db/rename_old_table.sql
+        - sqlFile:
+            path: classpath:db/changesets/002_normalize_db/create_new_tables.sql
+        - sqlFile:
+            path: classpath:db/changesets/002_normalize_db/migrate_data_to_new_tables.sql

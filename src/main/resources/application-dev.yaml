@@ -8,7 +8,9 @@ spring:
     username: test
     password: test
 
-telegram-forwarder-user: devuser
+message-fetcher:
+  url: message-fetcher/
+
 telegram-bot-starter:
   bot:
-    token: dev-token-bot
+    token: 7990515025:AAHo9MyYefC6mVmoykCSs40asp-vp8Bdk9c

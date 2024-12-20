@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: "003"
+      author: "a.lashnev"
+      changes:
+        - sqlFile:
+            path: classpath:db/changesets/003_using_bot_as_forwarder/add_chat_id_to_subscriber.sql
+        - sqlFile:
+            path: classpath:db/changesets/003_using_bot_as_forwarder/add_group_invalid_field_and_last_message_id.sql

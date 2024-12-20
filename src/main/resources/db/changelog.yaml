@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: classpath:db/changesets/001_init/changeset.yaml
+  - include:
+      file: classpath:db/changesets/002_normalize_db/changeset.yaml
+  - include:
+      file: classpath:db/changesets/003_using_bot_as_forwarder/changeset.yaml

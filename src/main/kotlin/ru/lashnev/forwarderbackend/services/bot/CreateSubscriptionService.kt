@@ -1,4 +1,4 @@
-package ru.lashnev.forwarderbackend.services
+package ru.lashnev.forwarderbackend.services.bot
 
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
@@ -7,20 +7,15 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
-import ru.lashnev.forwarderbackend.models.AdminCommand
-import ru.lashnev.forwarderbackend.models.Subscription
-import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.logger
 import com.github.lashnag.telegrambotstarter.UpdatesService
-import org.springframework.beans.factory.annotation.Value
-import ru.lashnev.forwarderbackend.models.Keyword
+import ru.lashnev.forwarderbackend.models.*
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
 class CreateSubscriptionService(
     private val subscriptionDao: SubscriptionDao,
     private val sendTextUtilService: SendTextUtilService,
-    @Value("\${telegram-forwarder-user}") private val telegramForwarderUser: String
 ) : UpdatesService {
 
     val userContext: MutableMap<Long, State> = mutableMapOf()
@@ -33,8 +28,8 @@ class CreateSubscriptionService(
 
     data class State(
         var stage: ProcessStage,
-        var subscriber: String,
-        var subscription: String? = null,
+        var subscriber: Subscriber,
+        var group: Group? = null,
         var keywords: MutableSet<Keyword> = mutableSetOf(),
     )
 
@@ -60,8 +55,10 @@ class CreateSubscriptionService(
         val msg = update.message()
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
-            userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, msg.from().username())
-            sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
+            userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, Subscriber(msg.from().username(), msg.from().id()))
+            sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(
+                cancelButton
+            ))
             return
         }
 
@@ -86,18 +83,18 @@ class CreateSubscriptionService(
         handleError(callbackQuery.from().id()) {
             val state = userContext[callbackQuery.from().id()]
             checkNotNull(state)
-            val subscription = Subscription(state.subscriber, state.subscription!!, state.keywords)
-            val existedSubscriptions = subscriptionDao.getSubscriptions(state.subscriber)
+            val subscription = Subscription(state.subscriber, state.group!!, state.keywords)
+            val existedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(state.subscriber.username)
             val intersectedSubscriptions = existedSubscriptions.filter {
-                it.subscriber == state.subscriber && it.subscription == state.subscription!! && it.keywords.map { it.value }
+                it.subscriber == state.subscriber && it.group == state.group!! && it.keywords.map { it.value }
                     .intersect(state.keywords.map { it.value }).isNotEmpty()
             }
 
             if (intersectedSubscriptions.isEmpty()) {
                 subscriptionDao.addSubscription(subscription)
-                sendTextUtilService.sendText(callbackQuery.from().id(), "$SUBSCRIPTION_SUCCESS. Добавьте в контакты @$telegramForwarderUser")
+                sendTextUtilService.sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
             } else {
-                sendTextUtilService.sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().subscription}")
+                sendTextUtilService.sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().group}")
             }
             userContext.remove(callbackQuery.from().id())
         }
@@ -113,11 +110,16 @@ class CreateSubscriptionService(
 
     private fun subscriptionEntered(msg: Message, userState: State) {
         handleError(msg.from().id()) {
-            if(msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) || msg.text().contains(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
-                userState.subscription = msg.text()
-                    .replace(DOMAIN_IN_TELEGRAM_LINK, "")
-                    .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
-                    .replace(DOMAIN_WEB_TELEGRAM_LINK, "")
+            if(msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) || msg.text().contains(
+                    DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL
+                ) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
+                userState.group = Group(
+                    msg.text()
+                        .replace(DOMAIN_IN_TELEGRAM_LINK, "")
+                        .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
+                        .replace(DOMAIN_WEB_TELEGRAM_LINK, ""),
+                    0
+                )
                 userState.stage = ProcessStage.ENTER_KEYWORD
                 sendTextUtilService.sendText(
                     msg.from().id(),
