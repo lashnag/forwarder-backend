@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn jooq-codegen:generate -Pprod
+RUN sh -c "sleep 30 && mvn jooq-codegen:generate -Pprod"
 RUN mvn clean package -DskipTests
 
 # Этап выполнения
@@ -15,4 +15,4 @@ WORKDIR /app
 
 COPY --from=build /app/target/ForwarderBackend-2.0.0.jar ForwarderBackend.jar
 
-ENTRYPOINT ["sh", "-c", "sleep 30; exec java -jar ForwarderBackend.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -jar ForwarderBackend.jar"]
