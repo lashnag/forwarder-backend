@@ -4,9 +4,9 @@ import jakarta.transaction.Transactional
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
-import org.jooq.generated.public_.tables.Groups.*
-import org.jooq.generated.public_.tables.Keywords.*
-import org.jooq.generated.public_.tables.Subscribers.*
+import ru.lashnev.forwarderbackend.dao.jooq.tables.Groups.*
+import ru.lashnev.forwarderbackend.dao.jooq.tables.Keywords.*
+import ru.lashnev.forwarderbackend.dao.jooq.tables.Subscribers.*
 import org.springframework.stereotype.Repository
 import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.models.Keyword
@@ -101,7 +101,7 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
             .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
         dsl.delete(KEYWORDS)
-            .where(KEYWORDS.KEYWORD_ID.eq(subscriberId))
+            .where(KEYWORDS.SUBSCRIBER_ID.eq(subscriberId))
             .and(KEYWORDS.KEYWORD_ID.eq(keywordId))
             .execute()
     }

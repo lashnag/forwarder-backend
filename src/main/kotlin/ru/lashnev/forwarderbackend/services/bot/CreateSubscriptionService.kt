@@ -86,8 +86,8 @@ class CreateSubscriptionService(
             val subscription = Subscription(state.subscriber, state.group!!, state.keywords)
             val existedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(state.subscriber.username)
             val intersectedSubscriptions = existedSubscriptions.filter {
-                it.subscriber == state.subscriber && it.group == state.group!! && it.keywords.map { it.value }
-                    .intersect(state.keywords.map { it.value }).isNotEmpty()
+                it.subscriber.username == state.subscriber.username && it.group.name == state.group!!.name
+                    && it.keywords.map { it.value }.intersect(state.keywords.map { it.value }).isNotEmpty()
             }
 
             if (intersectedSubscriptions.isEmpty()) {

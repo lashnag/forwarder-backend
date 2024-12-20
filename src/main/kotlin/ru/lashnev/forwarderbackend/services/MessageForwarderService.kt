@@ -24,7 +24,7 @@ class MessageForwarderService(
     private val sendTextUtilService: SendTextUtilService,
 ) {
 
-    @Scheduled(fixedRate = 60)
+    @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     fun processMessages() {
         val subscribers = subscribersDao.getSubscribers()
         groupsDao.getGroups().forEach { group ->

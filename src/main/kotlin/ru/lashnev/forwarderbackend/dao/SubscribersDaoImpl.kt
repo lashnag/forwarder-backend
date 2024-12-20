@@ -1,7 +1,7 @@
 package ru.lashnev.forwarderbackend.dao
 
 import org.jooq.DSLContext
-import org.jooq.generated.public_.tables.Subscribers.SUBSCRIBERS
+import ru.lashnev.forwarderbackend.dao.jooq.tables.Subscribers.SUBSCRIBERS
 import org.springframework.stereotype.Repository
 import ru.lashnev.forwarderbackend.models.Subscriber
 

@@ -104,8 +104,8 @@ class MessageForwarderServiceTest : BaseIT() {
 
         messageForwarderService.processMessages()
 
-        verify(messageCheckerService, times(8)).containKeyword(anyString(), anySet())
-        verify(sendTextUtilService, times(8)).sendText(anyLong(), anyString(), any())
+        verify(messageCheckerService, times(4)).containKeyword(anyString(), anySet())
+        verify(sendTextUtilService, times(4)).sendText(anyLong(), anyString(), any())
         groupsDao.getGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }

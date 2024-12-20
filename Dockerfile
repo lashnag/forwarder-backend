@@ -5,7 +5,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn jooq-codegen:generate -Pprod
 RUN mvn clean package -DskipTests
 
 # Этап выполнения
