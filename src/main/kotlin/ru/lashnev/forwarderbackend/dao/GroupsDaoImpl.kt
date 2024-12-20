@@ -1,7 +1,7 @@
 package ru.lashnev.forwarderbackend.dao
 
 import org.jooq.DSLContext
-import ru.lashnev.forwarderbackend.dao.jooq.tables.Groups.GROUPS
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.GROUPS
 import org.springframework.stereotype.Repository
 import ru.lashnev.forwarderbackend.models.Group
 

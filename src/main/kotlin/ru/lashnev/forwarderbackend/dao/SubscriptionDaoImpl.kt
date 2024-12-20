@@ -4,9 +4,9 @@ import jakarta.transaction.Transactional
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
-import ru.lashnev.forwarderbackend.dao.jooq.tables.Groups.*
-import ru.lashnev.forwarderbackend.dao.jooq.tables.Keywords.*
-import ru.lashnev.forwarderbackend.dao.jooq.tables.Subscribers.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Keywords.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers.*
 import org.springframework.stereotype.Repository
 import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.models.Keyword
