@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN sh -c "sleep 30 && mvn jooq-codegen:generate -Pprod"
+RUN mvn jooq-codegen:generate -Pprod
 RUN mvn clean package -DskipTests
 
 # Этап выполнения
