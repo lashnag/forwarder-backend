@@ -46,7 +46,7 @@ class MessageForwarderServiceTest : BaseIT() {
 
         verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
         verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
-        groupsDao.getGroups().forEach {
+        groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(0)
         }
     }
@@ -62,7 +62,7 @@ class MessageForwarderServiceTest : BaseIT() {
 
         verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
         verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
-        groupsDao.getGroups().forEach {
+        groupsDao.getValidGroups().forEach {
             assertThat(it.invalid).isTrue()
         }
     }
@@ -86,7 +86,7 @@ class MessageForwarderServiceTest : BaseIT() {
 
         verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
         verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
-        groupsDao.getGroups().forEach {
+        groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }
     }
@@ -110,7 +110,7 @@ class MessageForwarderServiceTest : BaseIT() {
 
         verify(messageCheckerService, times(4)).containKeyword(anyString(), anySet())
         verify(sendTextUtilService, times(4)).sendText(anyLong(), anyString(), any())
-        groupsDao.getGroups().forEach {
+        groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }
     }

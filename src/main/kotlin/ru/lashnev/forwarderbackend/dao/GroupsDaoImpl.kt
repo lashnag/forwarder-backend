@@ -7,9 +7,10 @@ import ru.lashnev.forwarderbackend.models.Group
 
 @Repository
 class GroupsDaoImpl(private val dsl: DSLContext) : GroupsDao {
-    override fun getGroups(): Set<Group> {
+    override fun getValidGroups(): Set<Group> {
         return dsl.select()
             .from(GROUPS)
+            .where(GROUPS.INVALID.eq(false))
             .fetch()
             .map { Group(
                 it.get(GROUPS.GROUPNAME),

@@ -27,7 +27,7 @@ class MessageForwarderService(
     @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     fun processMessages() {
         val subscribers = subscribersDao.getSubscribers()
-        groupsDao.getGroups().forEach { group ->
+        groupsDao.getValidGroups().forEach { group ->
             try {
                 val response = restTemplate.getForEntity(
                     "${messageFetcherProperties.url}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
