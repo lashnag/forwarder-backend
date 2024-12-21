@@ -73,8 +73,10 @@ class MessageForwarderServiceTest : BaseIT() {
         `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
-                    listOf("Пересылаемое сообщение 1", "Пересылаемое сообщение 2"),
-                    10,
+                    linkedMapOf(
+                        9L to "Пересылаемое сообщение 1",
+                        10L to "Пересылаемое сообщение 2"
+                    ),
                 )
             )
         )
@@ -95,8 +97,10 @@ class MessageForwarderServiceTest : BaseIT() {
         `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
-                    listOf("Пересылаемое сообщение 1", "Пересылаемое сообщение 2"),
-                    10,
+                    linkedMapOf(
+                        9L to "Пересылаемое сообщение 1",
+                        10L to "Пересылаемое сообщение 2"
+                    ),
                 )
             )
         )
