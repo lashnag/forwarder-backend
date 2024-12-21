@@ -44,7 +44,7 @@ class MessageForwarderService(
                         } ?: throw  IllegalStateException("Cant find subscriber")
                         if (subscriber.chatId != null && messageCheckerService.containKeyword(message.value, keywords)) {
                             val messageLink = "https://t.me/${group.name}/${message.key}"
-                            val sendMessage = "$message \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению] $messageLink"
+                            val sendMessage = "${message.value} \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению] $messageLink"
                             sendTextUtilService.sendText(subscriber.chatId, sendMessage)
                         }
                     }
