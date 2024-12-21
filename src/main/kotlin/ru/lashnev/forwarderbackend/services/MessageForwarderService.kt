@@ -49,7 +49,9 @@ class MessageForwarderService(
                         }
                     }
                 }
-                groupsDao.setLastGroupMessage(group.name, response.messages.lastEntry().key)
+                response.messages.lastEntry()?.let { lastEntry ->
+                    groupsDao.setLastGroupMessage(group.name, lastEntry.key)
+                }
             } catch (e: HttpClientErrorException) {
                 logger.warn("Invalid group ${group.name}")
                 groupsDao.setGroupInvalid(group.name)
