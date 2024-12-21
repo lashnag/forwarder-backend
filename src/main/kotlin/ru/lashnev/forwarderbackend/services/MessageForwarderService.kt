@@ -42,14 +42,14 @@ class MessageForwarderService(
                         val subscriber = subscribers.find {
                             it.username == subscription.subscriber.username
                         } ?: throw  IllegalStateException("Cant find subscriber")
-                        if (subscriber.chatId != null && messageCheckerService.containKeyword(message, keywords)) {
-                            val messageLink = "https://t.me/${group.name}/${subscription.subscriber.username}"
-                            val sendMessage = "$message \n\n Сообщение переслано из группы: ${group.name} \n [Перейти к сообщению] $messageLink"
+                        if (subscriber.chatId != null && messageCheckerService.containKeyword(message.value, keywords)) {
+                            val messageLink = "https://t.me/${group.name}/${message.key}"
+                            val sendMessage = "$message \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению] $messageLink"
                             sendTextUtilService.sendText(subscriber.chatId, sendMessage)
                         }
                     }
                 }
-                groupsDao.setLastGroupMessage(group.name, response.lastMessageId)
+                groupsDao.setLastGroupMessage(group.name, response.messages.lastEntry().key)
             } catch (e: HttpClientErrorException) {
                 logger.warn("Invalid group ${group.name}")
                 groupsDao.setGroupInvalid(group.name)
