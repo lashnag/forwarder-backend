@@ -29,6 +29,7 @@ class MessageForwarderService(
         val subscribers = subscribersDao.getSubscribers()
         groupsDao.getValidGroups().forEach { group ->
             try {
+                logger.info("Processing group ${group.name}")
                 val response = restTemplate.getForEntity(
                     "${messageFetcherProperties.url}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
                     MessageFetcherResponse::class.java
@@ -42,6 +43,7 @@ class MessageForwarderService(
                         val subscriber = subscribers.find {
                             it.username == subscription.subscriber.username
                         } ?: throw  IllegalStateException("Cant find subscriber")
+                        logger.info("Check subscriber ${subscriber.username} with keywords $keywords")
                         if (subscriber.chatId != null && messageCheckerService.containKeyword(message.value, keywords)) {
                             val messageLink = "https://t.me/${group.name}/${message.key}"
                             val sendMessage = "${message.value} \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению] $messageLink"
