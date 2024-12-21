@@ -18,7 +18,7 @@ spring:
         enable_lazy_load_no_trans: true
 
 message-fetcher:
-  url: http://sender_api:4322/get-subscription-messages
+  url: http://sender:4322/get-subscription-messages
 
 telegram-bot-starter:
   bot:
