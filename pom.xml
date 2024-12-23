@@ -33,7 +33,7 @@
 		<java-telegram-bot-api.version>7.9.1</java-telegram-bot-api.version>
 		<telegram-bot-starter.version>v1.0.20</telegram-bot-starter.version>
 		<stanford-corenlp.version>4.5.7</stanford-corenlp.version>
-		<lemmatimizer.version>2022.11.28</lemmatimizer.version>
+		<lucene-steam.version>8.11.4</lucene-steam.version>
 
 		<db.url>jdbc:postgresql://localhost:5433/telegram_forwarder</db.url>
 		<db.user>test</db.user>
@@ -96,9 +96,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.demidko</groupId>
-			<artifactId>aot</artifactId>
-			<version>${lemmatimizer.version}</version>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>${lucene-steam.version}</version>
 		</dependency>
 
 		<dependency>
@@ -127,12 +127,6 @@
 			<version>${kotlin.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.apache.opennlp</groupId>
-			<artifactId>opennlp-tools</artifactId>
-			<version>2.4.0</version>
-		</dependency>
 	</dependencies>
 
 	<build>
@@ -142,16 +136,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<executable>true</executable>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
@@ -230,6 +214,10 @@
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>central</id>
+			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 	</repositories>
 </project>
