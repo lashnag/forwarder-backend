@@ -21,8 +21,10 @@ class CreateSubscriptionService(
     val userContext: MutableMap<Long, State> = mutableMapOf()
 
     enum class ProcessStage {
-        ENTER_SUBSCRIPTION,
-        ENTER_KEYWORD,
+        ENTER_GROUP,
+        CHOOSE_SEARCH_TYPE,
+        ENTER_SEARCH_KEYWORD,
+        ENTER_SEARCH_MAX_MONEY,
         CONFIRMATION
     }
 
@@ -30,7 +32,7 @@ class CreateSubscriptionService(
         var stage: ProcessStage,
         var subscriber: Subscriber,
         var group: Group? = null,
-        var keywords: MutableSet<Keyword> = mutableSetOf(),
+        var search: Search? = null,
     )
 
     override fun processUpdates(update: Update) {
@@ -42,7 +44,11 @@ class CreateSubscriptionService(
     private fun onUpdateReceived(update: Update) {
         if (update.callbackQuery() != null) {
             val buttonCallBack: CallbackQuery = update.callbackQuery()
-            if (buttonCallBack.data() == moreButton.callbackData) {
+            if (buttonCallBack.data() == keywordButton.callbackData) {
+                enterKeyword(buttonCallBack)
+            } else if (buttonCallBack.data() == maxMoneyButton.callbackData) {
+                enterMaxMoney(buttonCallBack)
+            } else if (buttonCallBack.data() == moreButton.callbackData) {
                 moreButtonClicked(buttonCallBack)
             } else if (buttonCallBack.data() == subscribeButton.callbackData) {
                 subscribeButtonClicked(buttonCallBack)
@@ -55,39 +61,62 @@ class CreateSubscriptionService(
         val msg = update.message()
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
-            userContext[telegramUser.id()] = State(ProcessStage.ENTER_SUBSCRIPTION, Subscriber(msg.from().username(), msg.from().id()))
-            sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(
-                cancelButton
-            ))
+            userContext[telegramUser.id()] = State(ProcessStage.ENTER_GROUP, Subscriber(msg.from().username(), msg.from().id()))
+            sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             return
         }
 
-        val userState = userContext[telegramUser.id()]
-        if (userState != null) {
-            when (userState.stage) {
-                ProcessStage.ENTER_SUBSCRIPTION -> subscriptionEntered(msg, userState)
-                ProcessStage.ENTER_KEYWORD -> keywordEntered(msg, userState)
-                ProcessStage.CONFIRMATION -> TODO()
-            }
+        val userState = checkNotNull(userContext[telegramUser.id()])
+        when (userState.stage) {
+            ProcessStage.ENTER_GROUP -> groupEntered(msg)
+            ProcessStage.ENTER_SEARCH_KEYWORD,
+            ProcessStage.ENTER_SEARCH_MAX_MONEY -> searchPropertyEntered(msg)
+            ProcessStage.CHOOSE_SEARCH_TYPE -> TODO()
+            ProcessStage.CONFIRMATION -> TODO()
+        }
+    }
+
+    private fun enterKeyword(callbackQuery: CallbackQuery) {
+        handleError(callbackQuery.from().id()) {
+            sendTextUtilService.sendText(callbackQuery.from().id(), ENTER_KEYWORD)
+            userContext[callbackQuery.from().id()]?.stage = ProcessStage.ENTER_SEARCH_KEYWORD
+        }
+    }
+
+    private fun enterMaxMoney(callbackQuery: CallbackQuery) {
+        handleError(callbackQuery.from().id()) {
+            sendTextUtilService.sendText(callbackQuery.from().id(), ENTER_MAX_MONEY)
+            userContext[callbackQuery.from().id()]?.stage = ProcessStage.ENTER_SEARCH_MAX_MONEY
         }
     }
 
     private fun moreButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            sendTextUtilService.sendText(callbackQuery.from().id(), ENTER_KEYWORD)
-            userContext[callbackQuery.from().id()]?.stage = ProcessStage.ENTER_KEYWORD
+            val userState = checkNotNull(userContext[callbackQuery.from().id()])
+
+            val replyButtons = InlineKeyboardMarkup()
+            replyButtons.addRow(keywordButton)
+            if (userState.search?.properties?.maxMoney == null) replyButtons.addRow(maxMoneyButton)
+            replyButtons.addRow(cancelButton)
+
+            userState.stage = ProcessStage.CHOOSE_SEARCH_TYPE
+            sendTextUtilService.sendText(
+                callbackQuery.from().id(),
+                CHOOSE_SEARCH_PARAM,
+                replyMarkup = replyButtons
+            )
         }
     }
 
     private fun subscribeButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
-            val state = userContext[callbackQuery.from().id()]
-            checkNotNull(state)
-            val subscription = Subscription(state.subscriber, state.group!!, state.keywords)
+            val state = checkNotNull(userContext[callbackQuery.from().id()])
+            val subscription = Subscription(state.subscriber, state.group!!, state.search!!)
             val existedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(state.subscriber.username)
             val intersectedSubscriptions = existedSubscriptions.filter {
-                it.subscriber.username == state.subscriber.username && it.group.name == state.group!!.name
-                    && it.keywords.map { it.value }.intersect(state.keywords.map { it.value }).isNotEmpty()
+                it.subscriber.username == state.subscriber.username
+                    && it.group.name == state.group!!.name
+                    && it.search.properties == state.search!!.properties
             }
 
             if (intersectedSubscriptions.isEmpty()) {
@@ -108,8 +137,10 @@ class CreateSubscriptionService(
         }
     }
 
-    private fun subscriptionEntered(msg: Message, userState: State) {
+    private fun groupEntered(msg: Message) {
         handleError(msg.from().id()) {
+            val userState = checkNotNull(userContext[msg.from().id()])
+
             if(msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) || msg.text().contains(
                     DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL
                 ) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
@@ -120,11 +151,16 @@ class CreateSubscriptionService(
                         .replace(DOMAIN_WEB_TELEGRAM_LINK, ""),
                     0
                 )
-                userState.stage = ProcessStage.ENTER_KEYWORD
+                val replyButtons = InlineKeyboardMarkup()
+                replyButtons.addRow(keywordButton)
+                if (userState.search?.properties?.maxMoney == null) replyButtons.addRow(maxMoneyButton)
+                replyButtons.addRow(cancelButton)
+
+                userState.stage = ProcessStage.CHOOSE_SEARCH_TYPE
                 sendTextUtilService.sendText(
                     msg.from().id(),
-                    ENTER_KEYWORD,
-                    replyMarkup = InlineKeyboardMarkup().addRow(cancelButton)
+                    CHOOSE_SEARCH_PARAM,
+                    replyMarkup = replyButtons
                 )
             } else {
                 sendTextUtilService.sendText(
@@ -135,8 +171,19 @@ class CreateSubscriptionService(
         }
     }
 
-    private fun keywordEntered(msg: Message, userState: State) {
+    private fun searchPropertyEntered(msg: Message) {
         handleError(msg.from().id()) {
+            val userState = checkNotNull(userContext[msg.from().id()])
+            val properties = userState.search?.properties ?: Properties().also {
+                userState.search = Search(null, it)
+            }
+            when(userState.stage) {
+                ProcessStage.ENTER_SEARCH_KEYWORD -> properties.keywords.add(msg.text())
+                ProcessStage.ENTER_SEARCH_MAX_MONEY -> properties.maxMoney = msg.text().toLong()
+                else -> throw IllegalStateException("State is ${userState.stage}")
+            }
+            userState.stage = ProcessStage.CONFIRMATION
+
             sendTextUtilService.sendText(
                 msg.from().id(),
                 CHOOSE_ACTION,
@@ -145,8 +192,6 @@ class CreateSubscriptionService(
                     .addRow(subscribeButton)
                     .addRow(cancelButton)
             )
-            userState.keywords.add(Keyword(value = msg.text()))
-            userState.stage = ProcessStage.CONFIRMATION
         }
     }
 
@@ -155,26 +200,33 @@ class CreateSubscriptionService(
             block()
         } catch (e: Exception) {
             logger.error("Exception in AdminBot ${e.message}", e)
-            sendTextUtilService.sendText(chatId, "Произошла ошибка попробуйте еще раз")
+            sendTextUtilService.sendText(chatId, ERROR_TEXT)
         }
     }
 
     companion object {
         private val logger = logger()
 
-        val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще слово").callbackData("more")
+        val moreButton: InlineKeyboardButton = InlineKeyboardButton("Еще условие").callbackData("more")
         val subscribeButton: InlineKeyboardButton = InlineKeyboardButton("Подписаться").callbackData("subscribe")
         val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
+
+        val keywordButton: InlineKeyboardButton = InlineKeyboardButton("Ключевое слово").callbackData("keyword")
+        const val ENTER_KEYWORD = "Введите ключевое слово для поиска (вводить можно в любой форме один раз)"
+
+        val maxMoneyButton: InlineKeyboardButton = InlineKeyboardButton("Максимальная сумма").callbackData("max-money")
+        const val ENTER_MAX_MONEY = "Введите максимальную сумму поиск (целое число)"
 
         const val DOMAIN_IN_TELEGRAM_LINK = "https://t.me/"
         const val DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL = "t.me/"
         const val DOMAIN_WEB_TELEGRAM_LINK = "https://telegram.me/s/"
         const val ERROR_GROUP_FORMAT = "Неправильный формат группы. Введите еще раз"
         const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username)"
-        const val ENTER_KEYWORD = "Введите ключевое слово (несколько слов через пробел если они все одновременно должны присутствовать в сообщении)"
+        const val CHOOSE_SEARCH_PARAM = "Введите условия для поиска сообщений (несколько условий будут соединены через условие \"И\")"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"
         const val ALREADY_EXISTED_SUBSCRIPTION = "Такая подписка уже есть в"
+        const val ERROR_TEXT = "Произошла ошибка попробуйте еще раз"
     }
 }

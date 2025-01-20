@@ -9,8 +9,8 @@ import java.util.List;
 
 import org.jooq.Constants;
 import org.jooq.Schema;
-import org.jooq.impl.CatalogImpl;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.Public;
+import org.jooq.impl.CatalogImpl;
 
 
 /**

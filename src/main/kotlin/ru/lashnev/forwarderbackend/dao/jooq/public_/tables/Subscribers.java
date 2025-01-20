@@ -28,7 +28,7 @@ import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.Keys;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.Public;
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Keywords.KeywordsPath;
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscriptions.SubscriptionsPath;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.records.SubscribersRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -151,17 +151,17 @@ public class Subscribers extends TableImpl<SubscribersRecord> {
         return Arrays.asList(Keys.SUBSCRIBERS_USERNAME_KEY);
     }
 
-    private transient KeywordsPath _keywords;
+    private transient SubscriptionsPath _subscriptions;
 
     /**
-     * Get the implicit to-many join path to the <code>public.keywords</code>
-     * table
+     * Get the implicit to-many join path to the
+     * <code>public.subscriptions</code> table
      */
-    public KeywordsPath keywords() {
-        if (_keywords == null)
-            _keywords = new KeywordsPath(this, null, Keys.KEYWORDS__KEYWORDS_SUBSCRIBER_ID_FKEY.getInverseKey());
+    public SubscriptionsPath subscriptions() {
+        if (_subscriptions == null)
+            _subscriptions = new SubscriptionsPath(this, null, Keys.SUBSCRIPTIONS__KEYWORDS_SUBSCRIBER_ID_FKEY.getInverseKey());
 
-        return _keywords;
+        return _subscriptions;
     }
 
     @Override

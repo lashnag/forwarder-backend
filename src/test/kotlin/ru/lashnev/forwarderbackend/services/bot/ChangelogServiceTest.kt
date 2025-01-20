@@ -4,9 +4,9 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.lashnev.forwarderbackend.BaseIT
@@ -22,13 +22,13 @@ class ChangelogServiceTest : BaseIT() {
 
     @Test
     fun testShowChangelog() {
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CHANGELOG.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val messageChangelog = mock<Message>()
+        val changelogUpdate = mock<Update>()
+        whenever(changelogUpdate.message()).thenReturn(messageChangelog)
+        whenever(messageChangelog.text()).thenReturn(AdminCommand.CHANGELOG.commandName)
+        whenever(messageChangelog.from()).thenReturn(user)
 
-        changelogService.processUpdates(createUpdate)
+        changelogService.processUpdates(changelogUpdate)
 
         verify(telegramBot).execute(captor.capture())
         assertTrue(captor.value.entities().parameters["text"].toString().contains("Changelog"))

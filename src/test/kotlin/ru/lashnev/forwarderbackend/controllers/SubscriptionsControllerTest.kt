@@ -32,8 +32,8 @@ class SubscriptionsControllerTest : BaseIT() {
             .andReturn()
             .response.contentAsString
 
-        val setDtotypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
-        val response = objectMapper.readValue(responseString, setDtotypeReference)
+        val setDtoTypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
+        val response = objectMapper.readValue(responseString, setDtoTypeReference)
         assertEquals(4, response.size)
     }
 
@@ -46,8 +46,8 @@ class SubscriptionsControllerTest : BaseIT() {
             .andReturn()
             .response.contentAsString
 
-        val setDtotypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
-        val response = objectMapper.readValue(responseString, setDtotypeReference)
+        val setDtoTypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
+        val response = objectMapper.readValue(responseString, setDtoTypeReference)
         assertEquals(1, response.size)
     }
 }

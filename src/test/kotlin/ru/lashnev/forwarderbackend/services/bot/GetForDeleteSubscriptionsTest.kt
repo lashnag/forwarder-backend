@@ -6,10 +6,10 @@ import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.times
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
@@ -29,23 +29,23 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun deleteAllSubscriptions() {
-        val messageGetSubscriptions = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageGetSubscriptions)
-        `when`(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
-        `when`(messageGetSubscriptions.from()).thenReturn(user)
+        val messageGetSubscriptions = mock<Message>()
+        val createUpdate = mock<Update>()
+        whenever(createUpdate.message()).thenReturn(messageGetSubscriptions)
+        whenever(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
+        whenever(messageGetSubscriptions.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(createUpdate)
         verify(telegramBot).execute(captor.capture())
         val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
         assertEquals(6, buttons.size)
 
-        val callbackQueryDeleteAllSubscriptions = mock(CallbackQuery::class.java)
-        val deleteAllSubscriptionsUpdate = mock(Update::class.java)
-        `when`(deleteAllSubscriptionsUpdate.callbackQuery()).thenReturn(callbackQueryDeleteAllSubscriptions)
+        val callbackQueryDeleteAllSubscriptions = mock<CallbackQuery>()
+        val deleteAllSubscriptionsUpdate = mock<Update>()
+        whenever(deleteAllSubscriptionsUpdate.callbackQuery()).thenReturn(callbackQueryDeleteAllSubscriptions)
         val buttonDeleteAll = buttons[5][0]
-        `when`(callbackQueryDeleteAllSubscriptions.data()).thenReturn(buttonDeleteAll.callbackData)
-        `when`(callbackQueryDeleteAllSubscriptions.from()).thenReturn(user)
+        whenever(callbackQueryDeleteAllSubscriptions.data()).thenReturn(buttonDeleteAll.callbackData)
+        whenever(callbackQueryDeleteAllSubscriptions.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
@@ -58,23 +58,23 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun deleteSamokatusSubscription() {
-        val messageGetSubscriptions = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageGetSubscriptions)
-        `when`(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
-        `when`(messageGetSubscriptions.from()).thenReturn(user)
+        val messageGetSubscriptions = mock<Message>()
+        val createUpdate = mock<Update>()
+        whenever(createUpdate.message()).thenReturn(messageGetSubscriptions)
+        whenever(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
+        whenever(messageGetSubscriptions.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(createUpdate)
         verify(telegramBot).execute(captor.capture())
         val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
         assertEquals(6, buttons.size)
 
-        val callbackQueryDeleteAllSubscriptions = mock(CallbackQuery::class.java)
-        val deleteAllSubscriptionsUpdate = mock(Update::class.java)
-        `when`(deleteAllSubscriptionsUpdate.callbackQuery()).thenReturn(callbackQueryDeleteAllSubscriptions)
+        val callbackQueryDeleteAllSubscriptions = mock<CallbackQuery>()
+        val deleteAllSubscriptionsUpdate = mock<Update>()
+        whenever(deleteAllSubscriptionsUpdate.callbackQuery()).thenReturn(callbackQueryDeleteAllSubscriptions)
         val deleteSamokatusSubscriptionButton = buttons[0][0]
-        `when`(callbackQueryDeleteAllSubscriptions.data()).thenReturn(deleteSamokatusSubscriptionButton.callbackData)
-        `when`(callbackQueryDeleteAllSubscriptions.from()).thenReturn(user)
+        whenever(callbackQueryDeleteAllSubscriptions.data()).thenReturn(deleteSamokatusSubscriptionButton.callbackData)
+        whenever(callbackQueryDeleteAllSubscriptions.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(deleteAllSubscriptionsUpdate)
 
@@ -87,30 +87,30 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun deleteSamokatusKazanKeyword() {
-        val messageGetSubscriptions = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageGetSubscriptions)
-        `when`(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
-        `when`(messageGetSubscriptions.from()).thenReturn(user)
+        val messageGetSubscriptions = mock<Message>()
+        val createUpdate = mock<Update>()
+        whenever(createUpdate.message()).thenReturn(messageGetSubscriptions)
+        whenever(messageGetSubscriptions.text()).thenReturn(AdminCommand.FETCH_SUBSCRIPTIONS.commandName)
+        whenever(messageGetSubscriptions.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(createUpdate)
         verify(telegramBot).execute(captor.capture())
         val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
         assertEquals(6, buttons.size)
 
-        val callbackQueryDeleteSamokatusKazanKeyword = mock(CallbackQuery::class.java)
-        val deleteSamokatusKazanKeywordUpdate = mock(Update::class.java)
-        `when`(deleteSamokatusKazanKeywordUpdate.callbackQuery()).thenReturn(callbackQueryDeleteSamokatusKazanKeyword)
+        val callbackQueryDeleteSamokatusKazanKeyword = mock<CallbackQuery>()
+        val deleteSamokatusKazanKeywordUpdate = mock<Update>()
+        whenever(deleteSamokatusKazanKeywordUpdate.callbackQuery()).thenReturn(callbackQueryDeleteSamokatusKazanKeyword)
         val deleteSamokatusKazanKeywordButton = buttons[1][0]
-        `when`(callbackQueryDeleteSamokatusKazanKeyword.data()).thenReturn(deleteSamokatusKazanKeywordButton.callbackData)
-        `when`(callbackQueryDeleteSamokatusKazanKeyword.from()).thenReturn(user)
+        whenever(callbackQueryDeleteSamokatusKazanKeyword.data()).thenReturn(deleteSamokatusKazanKeywordButton.callbackData)
+        whenever(callbackQueryDeleteSamokatusKazanKeyword.from()).thenReturn(user)
 
         getForDeleteSubscriptionsService.processUpdates(deleteSamokatusKazanKeywordUpdate)
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(2, savedSubscriptions.size)
-        assertEquals(1, savedSubscriptions.first().keywords.size)
+        assertEquals(1, savedSubscriptions.first().search.properties.keywords.size)
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED))
+        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED_SUBSCRIPTION))
     }
 }

@@ -18,14 +18,16 @@ class SubscriptionsController(
     fun getAllSubscriptions(): Set<SubscriptionRawDto> {
         val allSubscribers = subscribersDao.getSubscribers()
         val allSubscriptions = subscriptionExportService.getAllSubscriptions()
-        return allSubscriptions.flatMap { subscription ->
+        return allSubscriptions.mapNotNull { subscription ->
             val subscriber = checkNotNull(allSubscribers.find { it.username == subscription.subscriber.username })
             if (subscriber.chatId == null) {
-                subscription.keywords.map { keyword ->
-                    SubscriptionRawDto(subscription.subscriber.username, subscription.group.name, keyword.value)
-                }
+                SubscriptionRawDto(
+                    subscription.subscriber.username,
+                    subscription.group.name,
+                    subscription.search.properties.keywords.joinToString(separator = " ")
+                )
             } else {
-                emptySet()
+                null
             }
         }.toSet()
     }

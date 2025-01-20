@@ -6,10 +6,10 @@ import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.times
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
@@ -27,172 +27,335 @@ class CreateSubscriptionTest : BaseIT() {
     private lateinit var telegramBot: TelegramBot
 
     @Test
-    fun testCreateSubscription() {
+    fun testCreateSubscriptionSearchByTwoKeywords() {
         // request to create subscription
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val createSubscriptionMessage = mock<Message>()
+        val createSubscriptionUpdate = mock<Update>()
+        whenever(createSubscriptionUpdate.message()).thenReturn(createSubscriptionMessage)
+        whenever(createSubscriptionMessage.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(createSubscriptionMessage.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdate)
+        createSubscriptionService.processUpdates(createSubscriptionUpdate)
         verify(telegramBot).execute(captor.capture())
         assertEquals(CreateSubscriptionService.ENTER_GROUP_NAME, captor.value.entities().parameters["text"])
 
         // enter subscription
-        val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
-        val createUpdateEnterSubscription = mock(Update::class.java)
-        `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn(VALID_GROUP_NAME)
-        `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
+        val enterSubscriptionMessage = mock<Message>()
+        val enterSubscriptionUpdate = mock<Update>()
+        whenever(enterSubscriptionUpdate.message()).thenReturn(enterSubscriptionMessage)
+        whenever(enterSubscriptionMessage.text()).thenReturn(VALID_GROUP_NAME)
+        whenever(enterSubscriptionMessage.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdateEnterSubscription)
+        createSubscriptionService.processUpdates(enterSubscriptionUpdate)
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
+        assertEquals(CreateSubscriptionService.CHOOSE_SEARCH_PARAM, captor.value.entities().parameters["text"])
+        val searchTypeButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, searchTypeButtons.size)
 
-        // enter keyword 1
-        val messageCreateSubscriptionEnterKeyword1 = mock(Message::class.java)
-        val createUpdateEnterKeyword1 = mock(Update::class.java)
-        `when`(createUpdateEnterKeyword1.message()).thenReturn(messageCreateSubscriptionEnterKeyword1)
-        `when`(messageCreateSubscriptionEnterKeyword1.text()).thenReturn("казань")
-        `when`(messageCreateSubscriptionEnterKeyword1.from()).thenReturn(user)
+        // choose search by keyword first
+        val firstChooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
+        val firstChooseSearchTypeKeywordUpdate = mock<Update>()
+        whenever(firstChooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(firstChooseSearchTypeKeywordCallbackQuery)
+        val firstChooseSearchTypeKeywordButton = searchTypeButtons.first().first()
+        whenever(firstChooseSearchTypeKeywordCallbackQuery.data()).thenReturn(firstChooseSearchTypeKeywordButton.callbackData)
+        whenever(firstChooseSearchTypeKeywordCallbackQuery.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdateEnterKeyword1)
+        createSubscriptionService.processUpdates(firstChooseSearchTypeKeywordUpdate)
         verify(telegramBot, times(3)).execute(captor.capture())
-        val buttons1 = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
-        assertEquals(3, buttons1.size)
-
-        // enter one more keyword
-        val callbackQueryMoreKeywords = mock(CallbackQuery::class.java)
-        val createUpdateMoreKeywords = mock(Update::class.java)
-        `when`(createUpdateMoreKeywords.callbackQuery()).thenReturn(callbackQueryMoreKeywords)
-        val buttonMore = buttons1.first()[0]
-        `when`(callbackQueryMoreKeywords.data()).thenReturn(buttonMore.callbackData)
-        `when`(callbackQueryMoreKeywords.from()).thenReturn(user)
-
-        createSubscriptionService.processUpdates(createUpdateMoreKeywords)
-        verify(telegramBot, times(4)).execute(captor.capture())
         assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
 
-        // enter keyword 2
-        val messageCreateSubscriptionEnterKeyword2 = mock(Message::class.java)
-        val createUpdateEnterKeyword2 = mock(Update::class.java)
-        `when`(createUpdateEnterKeyword2.message()).thenReturn(messageCreateSubscriptionEnterKeyword2)
-        `when`(messageCreateSubscriptionEnterKeyword2.text()).thenReturn("новосибирск")
-        `when`(messageCreateSubscriptionEnterKeyword2.from()).thenReturn(user)
+        // enter first keyword
+        val enterFirstKeywordMessage = mock<Message>()
+        val enterFirstKeywordUpdate = mock<Update>()
+        whenever(enterFirstKeywordUpdate.message()).thenReturn(enterFirstKeywordMessage)
+        whenever(enterFirstKeywordMessage.text()).thenReturn("казань")
+        whenever(enterFirstKeywordMessage.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdateEnterKeyword2)
+        createSubscriptionService.processUpdates(enterFirstKeywordUpdate)
+        verify(telegramBot, times(4)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_ACTION, captor.value.entities().parameters["text"])
+        val afterFirstKeywordButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, afterFirstKeywordButtons.size)
+
+        // more search condition
+        val moreSearchConditionMessage = mock<CallbackQuery>()
+        val moreSearchConditionUpdate = mock<Update>()
+        whenever(moreSearchConditionUpdate.callbackQuery()).thenReturn(moreSearchConditionMessage)
+        val moreSearchConditionButton = afterFirstKeywordButtons.first().first()
+        whenever(moreSearchConditionMessage.data()).thenReturn(moreSearchConditionButton.callbackData)
+        whenever(moreSearchConditionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(moreSearchConditionUpdate)
         verify(telegramBot, times(5)).execute(captor.capture())
-        val buttons2 = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
-        assertEquals(3, buttons2.size)
+        assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.CHOOSE_SEARCH_PARAM))
+
+        // choose search by keyword second
+        val secondChooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
+        val secondChooseSearchTypeKeywordUpdate = mock<Update>()
+        whenever(secondChooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(secondChooseSearchTypeKeywordCallbackQuery)
+        val secondChooseSearchTypeKeywordButton = searchTypeButtons.first().first()
+        whenever(secondChooseSearchTypeKeywordCallbackQuery.data()).thenReturn(secondChooseSearchTypeKeywordButton.callbackData)
+        whenever(secondChooseSearchTypeKeywordCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(secondChooseSearchTypeKeywordUpdate)
+        verify(telegramBot, times(6)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
+
+        // enter second keyword
+        val enterSecondKeywordMessage = mock<Message>()
+        val enterSecondKeywordUpdate = mock<Update>()
+        whenever(enterSecondKeywordUpdate.message()).thenReturn(enterSecondKeywordMessage)
+        whenever(enterSecondKeywordMessage.text()).thenReturn("новосибирск")
+        whenever(enterSecondKeywordMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterSecondKeywordUpdate)
+        verify(telegramBot, times(7)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_ACTION, captor.value.entities().parameters["text"])
+        val afterSecondKeywordButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, afterSecondKeywordButtons.size)
 
         // save subscription entered
-        val callbackQuerySave = mock(CallbackQuery::class.java)
-        val createUpdateSave = mock(Update::class.java)
-        `when`(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
-        val buttonSubscribe = buttons2[1][0]
-        `when`(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
-        `when`(callbackQuerySave.from()).thenReturn(user)
+        val saveCallbackQuery = mock<CallbackQuery>()
+        val saveUpdate = mock<Update>()
+        whenever(saveUpdate.callbackQuery()).thenReturn(saveCallbackQuery)
+        val subscribeButton = afterSecondKeywordButtons[1][0]
+        whenever(saveCallbackQuery.data()).thenReturn(subscribeButton.callbackData)
+        whenever(saveCallbackQuery.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdateSave)
-        verify(telegramBot, times(6)).execute(captor.capture())
+        createSubscriptionService.processUpdates(saveUpdate)
+        verify(telegramBot, times(8)).execute(captor.capture())
         assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.SUBSCRIPTION_SUCCESS))
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
-        assertEquals(2, savedSubscriptions.first().keywords.size)
+        assertEquals(2, savedSubscriptions.first().search.properties.keywords.size)
+    }
+
+    @Test
+    fun testCreateSubscriptionSearchKeywordAndMaxAmount() {
+        // request to create subscription
+        val createSubscriptionMessage = mock<Message>()
+        val createSubscriptionUpdate = mock<Update>()
+        whenever(createSubscriptionUpdate.message()).thenReturn(createSubscriptionMessage)
+        whenever(createSubscriptionMessage.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(createSubscriptionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createSubscriptionUpdate)
+        verify(telegramBot).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_GROUP_NAME, captor.value.entities().parameters["text"])
+
+        // enter subscription
+        val enterSubscriptionMessage = mock<Message>()
+        val enterSubscriptionUpdate = mock<Update>()
+        whenever(enterSubscriptionUpdate.message()).thenReturn(enterSubscriptionMessage)
+        whenever(enterSubscriptionMessage.text()).thenReturn(VALID_GROUP_NAME)
+        whenever(enterSubscriptionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterSubscriptionUpdate)
+        verify(telegramBot, times(2)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_SEARCH_PARAM, captor.value.entities().parameters["text"])
+        val searchTypeButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, searchTypeButtons.size)
+
+        // choose search by keyword
+        val chooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
+        val chooseSearchTypeKeywordUpdate = mock<Update>()
+        whenever(chooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(chooseSearchTypeKeywordCallbackQuery)
+        val chooseSearchTypeKeywordButton = searchTypeButtons.first().first()
+        whenever(chooseSearchTypeKeywordCallbackQuery.data()).thenReturn(chooseSearchTypeKeywordButton.callbackData)
+        whenever(chooseSearchTypeKeywordCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(chooseSearchTypeKeywordUpdate)
+        verify(telegramBot, times(3)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
+
+        // enter keyword
+        val enterKeywordMessage = mock<Message>()
+        val enterKeywordUpdate = mock<Update>()
+        whenever(enterKeywordUpdate.message()).thenReturn(enterKeywordMessage)
+        whenever(enterKeywordMessage.text()).thenReturn("казань")
+        whenever(enterKeywordMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterKeywordUpdate)
+        verify(telegramBot, times(4)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_ACTION, captor.value.entities().parameters["text"])
+        val afterFirstKeywordButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, afterFirstKeywordButtons.size)
+
+        // more search condition
+        val moreSearchConditionMessage = mock<CallbackQuery>()
+        val moreSearchConditionUpdate = mock<Update>()
+        whenever(moreSearchConditionUpdate.callbackQuery()).thenReturn(moreSearchConditionMessage)
+        val moreSearchConditionButton = afterFirstKeywordButtons.first().first()
+        whenever(moreSearchConditionMessage.data()).thenReturn(moreSearchConditionButton.callbackData)
+        whenever(moreSearchConditionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(moreSearchConditionUpdate)
+        verify(telegramBot, times(5)).execute(captor.capture())
+        assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.CHOOSE_SEARCH_PARAM))
+
+        // choose search by max amount
+        val chooseSearchTypeMaxAmountCallbackQuery = mock<CallbackQuery>()
+        val chooseSearchTypeMaxAmountUpdate = mock<Update>()
+        whenever(chooseSearchTypeMaxAmountUpdate.callbackQuery()).thenReturn(chooseSearchTypeMaxAmountCallbackQuery)
+        val chooseSearchTypeMaxAmountButton = searchTypeButtons[1].first()
+        whenever(chooseSearchTypeMaxAmountCallbackQuery.data()).thenReturn(chooseSearchTypeMaxAmountButton.callbackData)
+        whenever(chooseSearchTypeMaxAmountCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(chooseSearchTypeMaxAmountUpdate)
+        verify(telegramBot, times(6)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_MAX_MONEY, captor.value.entities().parameters["text"])
+
+        // enter max amount
+        val enterMaxAmountMessage = mock<Message>()
+        val enterMaxAmountUpdate = mock<Update>()
+        whenever(enterMaxAmountUpdate.message()).thenReturn(enterMaxAmountMessage)
+        whenever(enterMaxAmountMessage.text()).thenReturn("10000")
+        whenever(enterMaxAmountMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterMaxAmountUpdate)
+        verify(telegramBot, times(7)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_ACTION, captor.value.entities().parameters["text"])
+        val afterSecondKeywordButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, afterSecondKeywordButtons.size)
+
+        // save subscription entered
+        val saveCallbackQuery = mock<CallbackQuery>()
+        val saveUpdate = mock<Update>()
+        whenever(saveUpdate.callbackQuery()).thenReturn(saveCallbackQuery)
+        val subscribeButton = afterSecondKeywordButtons[1][0]
+        whenever(saveCallbackQuery.data()).thenReturn(subscribeButton.callbackData)
+        whenever(saveCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(saveUpdate)
+        verify(telegramBot, times(8)).execute(captor.capture())
+        assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.SUBSCRIPTION_SUCCESS))
+
+        val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
+        assertEquals(1, savedSubscriptions.size)
+        assertEquals(1, savedSubscriptions.first().search.properties.keywords.size)
+        assertEquals(10000, savedSubscriptions.first().search.properties.maxMoney)
     }
 
     @Test
     @Sql("/sql/subscriptions.sql")
     fun testCreateAlreadyExistedSubscription() {
         // request to create subscription
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val createSubscriptionMessage = mock<Message>()
+        val createSubscriptionUpdate = mock<Update>()
+        whenever(createSubscriptionUpdate.message()).thenReturn(createSubscriptionMessage)
+        whenever(createSubscriptionMessage.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(createSubscriptionMessage.from()).thenReturn(user)
 
-        createSubscriptionService.processUpdates(createUpdate)
+        createSubscriptionService.processUpdates(createSubscriptionUpdate)
 
         // enter existed subscription
-        val messageCreateSubscriptionEnterExistedSubscription = mock(Message::class.java)
-        val createUpdateEnterExistedSubscription = mock(Update::class.java)
-        `when`(createUpdateEnterExistedSubscription.message()).thenReturn(messageCreateSubscriptionEnterExistedSubscription)
-        `when`(messageCreateSubscriptionEnterExistedSubscription.text()).thenReturn(VALID_GROUP_NAME)
-        `when`(messageCreateSubscriptionEnterExistedSubscription.from()).thenReturn(user)
+        val messageCreateSubscriptionEnterExistedSubscription = mock<Message>()
+        val createUpdateEnterExistedSubscription = mock<Update>()
+        whenever(createUpdateEnterExistedSubscription.message()).thenReturn(messageCreateSubscriptionEnterExistedSubscription)
+        whenever(messageCreateSubscriptionEnterExistedSubscription.text()).thenReturn(VALID_GROUP_NAME)
+        whenever(messageCreateSubscriptionEnterExistedSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterExistedSubscription)
+        verify(telegramBot, times(2)).execute(captor.capture())
+        val searchTypeButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, searchTypeButtons.size)
+
+        // choose search by keyword second
+        val chooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
+        val chooseSearchTypeKeywordUpdate = mock<Update>()
+        whenever(chooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(chooseSearchTypeKeywordCallbackQuery)
+        val secondChooseSearchTypeKeywordButton = searchTypeButtons.first().first()
+        whenever(chooseSearchTypeKeywordCallbackQuery.data()).thenReturn(secondChooseSearchTypeKeywordButton.callbackData)
+        whenever(chooseSearchTypeKeywordCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(chooseSearchTypeKeywordUpdate)
+        verify(telegramBot, times(3)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
 
         // enter existed keyword
-        val messageCreateSubscriptionEnterExistedKeyword = mock(Message::class.java)
-        val createUpdateEnterExistedKeyword = mock(Update::class.java)
-        `when`(createUpdateEnterExistedKeyword.message()).thenReturn(messageCreateSubscriptionEnterExistedKeyword)
-        `when`(messageCreateSubscriptionEnterExistedKeyword.text()).thenReturn("казань")
-        `when`(messageCreateSubscriptionEnterExistedKeyword.from()).thenReturn(user)
+        val messageCreateSubscriptionEnterExistedKeyword = mock<Message>()
+        val createUpdateEnterExistedKeyword = mock<Update>()
+        whenever(createUpdateEnterExistedKeyword.message()).thenReturn(messageCreateSubscriptionEnterExistedKeyword)
+        whenever(messageCreateSubscriptionEnterExistedKeyword.text()).thenReturn("казань")
+        whenever(messageCreateSubscriptionEnterExistedKeyword.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterExistedKeyword)
-        verify(telegramBot, times(3)).execute(captor.capture())
+        verify(telegramBot, times(4)).execute(captor.capture())
         val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
 
         // save subscription entered
-        val callbackQuerySave = mock(CallbackQuery::class.java)
-        val createUpdateSave = mock(Update::class.java)
-        `when`(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
+        val callbackQuerySave = mock<CallbackQuery>()
+        val createUpdateSave = mock<Update>()
+        whenever(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
         val buttonSubscribe = buttons[1][0]
-        `when`(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
-        `when`(callbackQuerySave.from()).thenReturn(user)
+        whenever(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
+        whenever(callbackQuerySave.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateSave)
-        verify(telegramBot, times(4)).execute(captor.capture())
+        verify(telegramBot, times(5)).execute(captor.capture())
         assertTrue((captor.value.entities().parameters["text"] as String).contains(CreateSubscriptionService.ALREADY_EXISTED_SUBSCRIPTION))
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
-        assertEquals(2, savedSubscriptions.size)
-        assertEquals(2, savedSubscriptions.first().keywords.size)
+        assertEquals(3, savedSubscriptions.size)
     }
 
     @Test
     fun testCreateSubscriptionCanceled() {
         // request to create subscription
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val messageCreateSubscription = mock<Message>()
+        val createUpdate = mock<Update>()
+        whenever(createUpdate.message()).thenReturn(messageCreateSubscription)
+        whenever(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(messageCreateSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdate)
 
         // enter subscription name
-        val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
-        val createUpdateEnterSubscription = mock(Update::class.java)
-        `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn(VALID_GROUP_NAME)
-        `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
+        val messageCreateSubscriptionEnterSubscription = mock<Message>()
+        val createUpdateEnterSubscription = mock<Update>()
+        whenever(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
+        whenever(messageCreateSubscriptionEnterSubscription.text()).thenReturn(VALID_GROUP_NAME)
+        whenever(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterSubscription)
+        verify(telegramBot, times(2)).execute(captor.capture())
+        val searchTypeButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, searchTypeButtons.size)
+
+        // choose search by keyword second
+        val chooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
+        val chooseSearchTypeKeywordUpdate = mock<Update>()
+        whenever(chooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(chooseSearchTypeKeywordCallbackQuery)
+        val secondChooseSearchTypeKeywordButton = searchTypeButtons.first().first()
+        whenever(chooseSearchTypeKeywordCallbackQuery.data()).thenReturn(secondChooseSearchTypeKeywordButton.callbackData)
+        whenever(chooseSearchTypeKeywordCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(chooseSearchTypeKeywordUpdate)
+        verify(telegramBot, times(3)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_KEYWORD, captor.value.entities().parameters["text"])
 
         // enter keyword
-        val messageCreateSubscriptionEnterKeyword = mock(Message::class.java)
-        val createUpdateEnterKeyword = mock(Update::class.java)
-        `when`(createUpdateEnterKeyword.message()).thenReturn(messageCreateSubscriptionEnterKeyword)
-        `when`(messageCreateSubscriptionEnterKeyword.text()).thenReturn("казань")
-        `when`(messageCreateSubscriptionEnterKeyword.from()).thenReturn(user)
+        val messageCreateSubscriptionEnterKeyword = mock<Message>()
+        val createUpdateEnterKeyword = mock<Update>()
+        whenever(createUpdateEnterKeyword.message()).thenReturn(messageCreateSubscriptionEnterKeyword)
+        whenever(messageCreateSubscriptionEnterKeyword.text()).thenReturn("казань")
+        whenever(messageCreateSubscriptionEnterKeyword.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterKeyword)
-        verify(telegramBot, times(3)).execute(captor.capture())
+        verify(telegramBot, times(4)).execute(captor.capture())
         val buttons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
 
         // cancel subscription entered
-        val callbackQuerySave = mock(CallbackQuery::class.java)
-        val createUpdateSave = mock(Update::class.java)
-        `when`(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
+        val callbackQuerySave = mock<CallbackQuery>()
+        val createUpdateSave = mock<Update>()
+        whenever(createUpdateSave.callbackQuery()).thenReturn(callbackQuerySave)
         val buttonSubscribe = buttons[2][0]
-        `when`(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
-        `when`(callbackQuerySave.from()).thenReturn(user)
+        whenever(callbackQuerySave.data()).thenReturn(buttonSubscribe.callbackData)
+        whenever(callbackQuerySave.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateSave)
-        verify(telegramBot, times(4)).execute(captor.capture())
+        verify(telegramBot, times(5)).execute(captor.capture())
         assertEquals(captor.value.entities().parameters["text"], CreateSubscriptionService.SUBSCRIPTION_CANCELED)
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
@@ -202,24 +365,74 @@ class CreateSubscriptionTest : BaseIT() {
     @Test
     fun testCreateSubscriptionWithWrongNameNeedToRetry() {
         // request to create subscription
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val messageCreateSubscription = mock<Message>()
+        val createUpdate = mock<Update>()
+        whenever(createUpdate.message()).thenReturn(messageCreateSubscription)
+        whenever(messageCreateSubscription.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(messageCreateSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdate)
 
         // enter subscription name
-        val messageCreateSubscriptionEnterSubscription = mock(Message::class.java)
-        val createUpdateEnterSubscription = mock(Update::class.java)
-        `when`(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
-        `when`(messageCreateSubscriptionEnterSubscription.text()).thenReturn("invalid_group_name")
-        `when`(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
+        val messageCreateSubscriptionEnterSubscription = mock<Message>()
+        val createUpdateEnterSubscription = mock<Update>()
+        whenever(createUpdateEnterSubscription.message()).thenReturn(messageCreateSubscriptionEnterSubscription)
+        whenever(messageCreateSubscriptionEnterSubscription.text()).thenReturn("invalid_group_name")
+        whenever(messageCreateSubscriptionEnterSubscription.from()).thenReturn(user)
 
         createSubscriptionService.processUpdates(createUpdateEnterSubscription)
         verify(telegramBot, times(2)).execute(captor.capture())
         assertEquals(captor.value.entities().parameters["text"], CreateSubscriptionService.ERROR_GROUP_FORMAT)
+    }
+
+    @Test
+    fun testCreateSubscriptionSearchMaxAmountWrongFormat() {
+        // request to create subscription
+        val createSubscriptionMessage = mock<Message>()
+        val createSubscriptionUpdate = mock<Update>()
+        whenever(createSubscriptionUpdate.message()).thenReturn(createSubscriptionMessage)
+        whenever(createSubscriptionMessage.text()).thenReturn(AdminCommand.CREATE_SUBSCRIPTION.commandName)
+        whenever(createSubscriptionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(createSubscriptionUpdate)
+        verify(telegramBot).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_GROUP_NAME, captor.value.entities().parameters["text"])
+
+        // enter subscription
+        val enterSubscriptionMessage = mock<Message>()
+        val enterSubscriptionUpdate = mock<Update>()
+        whenever(enterSubscriptionUpdate.message()).thenReturn(enterSubscriptionMessage)
+        whenever(enterSubscriptionMessage.text()).thenReturn(VALID_GROUP_NAME)
+        whenever(enterSubscriptionMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterSubscriptionUpdate)
+        verify(telegramBot, times(2)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.CHOOSE_SEARCH_PARAM, captor.value.entities().parameters["text"])
+        val searchTypeButtons = (captor.value.entities().parameters["reply_markup"] as InlineKeyboardMarkup).inlineKeyboard()
+        assertEquals(3, searchTypeButtons.size)
+
+        // choose search by max amount
+        val chooseSearchTypeMaxAmountCallbackQuery = mock<CallbackQuery>()
+        val chooseSearchTypeMaxAmountUpdate = mock<Update>()
+        whenever(chooseSearchTypeMaxAmountUpdate.callbackQuery()).thenReturn(chooseSearchTypeMaxAmountCallbackQuery)
+        val chooseSearchTypeMaxAmountButton = searchTypeButtons[1].first()
+        whenever(chooseSearchTypeMaxAmountCallbackQuery.data()).thenReturn(chooseSearchTypeMaxAmountButton.callbackData)
+        whenever(chooseSearchTypeMaxAmountCallbackQuery.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(chooseSearchTypeMaxAmountUpdate)
+        verify(telegramBot, times(3)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ENTER_MAX_MONEY, captor.value.entities().parameters["text"])
+
+        // enter max amount
+        val enterMaxAmountMessage = mock<Message>()
+        val enterMaxAmountUpdate = mock<Update>()
+        whenever(enterMaxAmountUpdate.message()).thenReturn(enterMaxAmountMessage)
+        whenever(enterMaxAmountMessage.text()).thenReturn("NOT_DIGIT")
+        whenever(enterMaxAmountMessage.from()).thenReturn(user)
+
+        createSubscriptionService.processUpdates(enterMaxAmountUpdate)
+        verify(telegramBot, times(4)).execute(captor.capture())
+        assertEquals(CreateSubscriptionService.ERROR_TEXT, captor.value.entities().parameters["text"])
     }
 
     companion object {

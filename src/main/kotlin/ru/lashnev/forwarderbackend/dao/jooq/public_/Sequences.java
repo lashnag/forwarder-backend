@@ -16,7 +16,7 @@ import org.jooq.impl.SQLDataType;
 public class Sequences {
 
     /**
-     * The sequence <code>public.subscriptions_subscription_id_seq</code>
+     * The sequence <code>public.keywords_keyword_id_seq</code>
      */
-    public static final Sequence<Integer> SUBSCRIPTIONS_SUBSCRIPTION_ID_SEQ = Internal.createSequence("subscriptions_subscription_id_seq", Public.PUBLIC, SQLDataType.INTEGER.nullable(false), null, null, null, null, false, null);
+    public static final Sequence<Integer> KEYWORDS_KEYWORD_ID_SEQ = Internal.createSequence("keywords_keyword_id_seq", Public.PUBLIC, SQLDataType.INTEGER.nullable(false), null, null, null, null, false, null);
 }

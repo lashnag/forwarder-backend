@@ -1,4 +1,4 @@
-package ru.lashnev.forwarderbackend.messagefetcher.dto
+package ru.lashnev.forwarderbackend.dto
 
 data class MessageFetcherResponse(
     val messages: LinkedHashMap<Long, String>

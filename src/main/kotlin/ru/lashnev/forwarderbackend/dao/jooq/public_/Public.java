@@ -11,12 +11,10 @@ import org.jooq.Catalog;
 import org.jooq.Sequence;
 import org.jooq.Table;
 import ru.lashnev.forwarderbackend.dao.jooq.DefaultCatalog;
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Databasechangelog;
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Databasechangeloglock;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups;
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Keywords;
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Searches;
 import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers;
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.SubscriptionsOld;
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscriptions;
 import org.jooq.impl.SchemaImpl;
 
 
@@ -34,24 +32,14 @@ public class Public extends SchemaImpl {
     public static final Public PUBLIC = new Public();
 
     /**
-     * The table <code>public.databasechangelog</code>.
-     */
-    public final Databasechangelog DATABASECHANGELOG = Databasechangelog.DATABASECHANGELOG;
-
-    /**
-     * The table <code>public.databasechangeloglock</code>.
-     */
-    public final Databasechangeloglock DATABASECHANGELOGLOCK = Databasechangeloglock.DATABASECHANGELOGLOCK;
-
-    /**
      * The table <code>public.groups</code>.
      */
     public final Groups GROUPS = Groups.GROUPS;
 
     /**
-     * The table <code>public.keywords</code>.
+     * The table <code>public.searches</code>.
      */
-    public final Keywords KEYWORDS = Keywords.KEYWORDS;
+    public final Searches SEARCHES = Searches.SEARCHES;
 
     /**
      * The table <code>public.subscribers</code>.
@@ -59,9 +47,9 @@ public class Public extends SchemaImpl {
     public final Subscribers SUBSCRIBERS = Subscribers.SUBSCRIBERS;
 
     /**
-     * The table <code>public.subscriptions_old</code>.
+     * The table <code>public.subscriptions</code>.
      */
-    public final SubscriptionsOld SUBSCRIPTIONS_OLD = SubscriptionsOld.SUBSCRIPTIONS_OLD;
+    public final Subscriptions SUBSCRIPTIONS = Subscriptions.SUBSCRIPTIONS;
 
     /**
      * No further instances allowed
@@ -79,19 +67,17 @@ public class Public extends SchemaImpl {
     @Override
     public final List<Sequence<?>> getSequences() {
         return Arrays.asList(
-            Sequences.SUBSCRIPTIONS_SUBSCRIPTION_ID_SEQ
+            Sequences.KEYWORDS_KEYWORD_ID_SEQ
         );
     }
 
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
-            Databasechangelog.DATABASECHANGELOG,
-            Databasechangeloglock.DATABASECHANGELOGLOCK,
             Groups.GROUPS,
-            Keywords.KEYWORDS,
+            Searches.SEARCHES,
             Subscribers.SUBSCRIBERS,
-            SubscriptionsOld.SUBSCRIPTIONS_OLD
+            Subscriptions.SUBSCRIPTIONS
         );
     }
 }

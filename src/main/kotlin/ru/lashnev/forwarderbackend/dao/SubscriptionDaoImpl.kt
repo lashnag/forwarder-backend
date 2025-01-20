@@ -1,25 +1,25 @@
 package ru.lashnev.forwarderbackend.dao
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Result
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.*
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Keywords.*
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers.*
 import org.springframework.stereotype.Repository
-import ru.lashnev.forwarderbackend.models.Group
-import ru.lashnev.forwarderbackend.models.Keyword
-import ru.lashnev.forwarderbackend.models.Subscriber
-import ru.lashnev.forwarderbackend.models.Subscription
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Searches.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers.*
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscriptions.*
+import ru.lashnev.forwarderbackend.models.*
+
 
 @Repository
-class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
+class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper: ObjectMapper) : SubscriptionDao {
 
     @Transactional
     override fun addSubscription(subscription: Subscription) {
         val subscriberId = dsl.insertInto(SUBSCRIBERS)
             .set(SUBSCRIBERS.USERNAME, subscription.subscriber.username)
+            .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
             .onConflict(SUBSCRIBERS.USERNAME)
             .doUpdate()
             .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
@@ -36,24 +36,31 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
             .fetchOne()!!
             .getValue(GROUPS.GROUP_ID)
 
-        subscription.keywords.forEach { keyword ->
-            dsl.insertInto(KEYWORDS)
-                .set(KEYWORDS.KEYWORD, keyword.value)
-                .set(KEYWORDS.GROUP_ID, groupId)
-                .set(KEYWORDS.SUBSCRIBER_ID, subscriberId)
-                .execute()
-        }
+        val searchId = dsl.insertInto(SEARCHES)
+            .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties))
+            .onConflict(SEARCHES.PROPERTIES)
+            .doNothing()
+            .returning()
+            .fetchOne()!!
+            .getValue(SEARCHES.SEARCH_ID)
+
+        dsl.insertInto(SUBSCRIPTIONS)
+            .set(SUBSCRIPTIONS.GROUP_ID, groupId)
+            .set(SUBSCRIPTIONS.SUBSCRIBER_ID, subscriberId)
+            .set(SUBSCRIPTIONS.SEARCH_ID, searchId)
+            .execute()
     }
 
     override fun getSubscriptionsBySubscriber(subscriber: String): Set<Subscription> {
         val subscriptions = dsl.select()
-            .from(SUBSCRIBERS)
-            .join(KEYWORDS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(KEYWORDS.SUBSCRIBER_ID))
-            .join(GROUPS).on(GROUPS.GROUP_ID.eq(KEYWORDS.GROUP_ID))
+            .from(SUBSCRIPTIONS)
+            .join(SUBSCRIBERS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
+            .join(GROUPS).on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
+            .join(SEARCHES).on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
             .where(SUBSCRIBERS.USERNAME.eq(subscriber))
             .fetch()
 
-        return subscriptions.toSubscriptions()
+        return subscriptions.map { it.toSubscription() }.toSet()
     }
 
     @Transactional
@@ -64,8 +71,8 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
             .fetchOne()!!
             .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        dsl.delete(KEYWORDS)
-            .where(KEYWORDS.SUBSCRIBER_ID.eq(subscriberId))
+        dsl.delete(SUBSCRIPTIONS)
+            .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
             .execute()
 
         dsl.deleteFrom(SUBSCRIBERS)
@@ -86,63 +93,63 @@ class SubscriptionDaoImpl(private val dsl: DSLContext) : SubscriptionDao {
             .fetchOne()!!
             .getValue(GROUPS.GROUP_ID)
 
-        dsl.delete(KEYWORDS)
-            .where(KEYWORDS.SUBSCRIBER_ID.eq(subscriberId))
-            .and(KEYWORDS.GROUP_ID.eq(groupId))
+        dsl.delete(SUBSCRIPTIONS)
+            .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
+            .and(SUBSCRIPTIONS.GROUP_ID.eq(groupId))
             .execute()
     }
 
     @Transactional
-    override fun deleteKeyword(subscriber: String, keywordId: Int) {
+    override fun deleteSubscription(subscriber: String, searchId: Int) {
         val subscriberId = dsl.select()
             .from(SUBSCRIBERS)
             .where(SUBSCRIBERS.USERNAME.eq(subscriber))
             .fetchOne()!!
             .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        dsl.delete(KEYWORDS)
-            .where(KEYWORDS.SUBSCRIBER_ID.eq(subscriberId))
-            .and(KEYWORDS.KEYWORD_ID.eq(keywordId))
+        dsl.delete(SUBSCRIPTIONS)
+            .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
+            .and(SUBSCRIPTIONS.SEARCH_ID.eq(searchId))
             .execute()
     }
 
     override fun deleteAll() {
-        dsl.delete(KEYWORDS).execute()
+        dsl.delete(SUBSCRIPTIONS).execute()
+        dsl.delete(SEARCHES).execute()
         dsl.delete(GROUPS).execute()
         dsl.delete(SUBSCRIBERS).execute()
     }
 
     override fun getAll(): Set<Subscription> {
         val subscriptions = dsl.select()
-            .from(SUBSCRIBERS)
-            .join(KEYWORDS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(KEYWORDS.SUBSCRIBER_ID))
-            .join(GROUPS).on(GROUPS.GROUP_ID.eq(KEYWORDS.GROUP_ID))
+            .from(SUBSCRIPTIONS)
+            .join(SUBSCRIBERS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
+            .join(GROUPS).on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
+            .join(SEARCHES).on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
             .fetch()
 
-        return subscriptions.toSubscriptions()
+        return subscriptions.map { it.toSubscription() }.toSet()
     }
 
-    private fun Result<Record>.toSubscriptions(): Set<Subscription> {
-        return this.groupBy { it.get(SUBSCRIBERS.USERNAME) }
-            .flatMap { (subscriber, group) ->
-                group.groupBy { it.get(GROUPS.GROUPNAME) }.map { (groupName, groupRecords) ->
-                    val chatId = groupRecords.firstOrNull()?.get(SUBSCRIBERS.CHATID)
-                    val lastMessageId = groupRecords.firstOrNull()?.get(GROUPS.LASTMESSAGEID)
+    private fun Record.toSubscription(): Subscription {
+        val groupName = this.get(GROUPS.GROUPNAME)
+        val lastMessageId = this.get(GROUPS.LASTMESSAGEID)
+        val group = Group(groupName, lastMessageId ?: 0)
 
-                    val keywords = groupRecords.map {
-                        Keyword(
-                            it.get(KEYWORDS.KEYWORD_ID),
-                            it.get(KEYWORDS.KEYWORD)
-                        )
-                    }.toSet()
+        val username = this.get(SUBSCRIBERS.USERNAME)
+        val chatId = this.get(SUBSCRIBERS.CHATID)?.toLong()
+        val subscriber = Subscriber(username, chatId)
 
-                    Subscription(
-                        Subscriber(subscriber, chatId?.toLong()),
-                        Group(groupName, lastMessageId ?: 0),
-                        keywords
-                    )
-                }
-            }.toSet()
+        val searchId = this.get(SEARCHES.SEARCH_ID)
+        val searchPropertiesString = this.get(SEARCHES.PROPERTIES)
+        val searchProperties = objectMapper.readValue(searchPropertiesString, Properties::class.java)
+        val search = Search(searchId, searchProperties)
+
+        return Subscription(
+            subscriber,
+            group,
+            search
+        )
     }
 
 }

@@ -2,14 +2,13 @@ package ru.lashnev.forwarderbackend.services
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.any
-import org.mockito.Mockito.anySet
-import org.mockito.Mockito.anyString
-import org.mockito.Mockito.eq
-import org.mockito.Mockito.anyLong
-import org.mockito.Mockito.times
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.verify
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
@@ -19,7 +18,8 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.BaseIT
-import ru.lashnev.forwarderbackend.messagefetcher.dto.MessageFetcherResponse
+import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
+import ru.lashnev.forwarderbackend.models.Properties
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 class MessageForwarderServiceTest : BaseIT() {
@@ -38,14 +38,14 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseError() {
-        `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenThrow(
+        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenThrow(
             RestClientException("Server Error")
         )
 
         messageForwarderService.processMessages()
 
-        verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
-        verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
+        verifyNoInteractions(messageCheckerService)
+        verifyNoInteractions(sendTextUtilService)
         groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(0)
         }
@@ -54,14 +54,14 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseGroupInvalid() {
-        `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenThrow(
+        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenThrow(
             HttpClientErrorException(HttpStatus.FORBIDDEN)
         )
 
         messageForwarderService.processMessages()
 
-        verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
-        verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
+        verifyNoInteractions(messageCheckerService)
+        verifyNoInteractions(sendTextUtilService)
         groupsDao.getValidGroups().forEach {
             assertThat(it.invalid).isTrue()
         }
@@ -70,7 +70,7 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseOkButSubscribersV1() {
-        `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenReturn(
+        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
@@ -80,12 +80,11 @@ class MessageForwarderServiceTest : BaseIT() {
                 )
             )
         )
-        `when`(messageCheckerService.containKeyword(anyString(), anySet())).thenReturn(true)
+        whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 
         messageForwarderService.processMessages()
 
-        verify(messageCheckerService, times(0)).containKeyword(anyString(), anySet())
-        verify(sendTextUtilService, times(0)).sendText(anyLong(), anyString(), any())
+        verifyNoInteractions(sendTextUtilService)
         groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }
@@ -94,7 +93,7 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions_v2.sql")
     fun messageFetcherResponseOk() {
-        `when`(restTemplate.getForEntity(anyString(), eq(MessageFetcherResponse::class.java))).thenReturn(
+        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
@@ -104,12 +103,12 @@ class MessageForwarderServiceTest : BaseIT() {
                 )
             )
         )
-        `when`(messageCheckerService.containKeyword(anyString(), anySet())).thenReturn(true)
+        whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 
         messageForwarderService.processMessages()
 
-        verify(messageCheckerService, times(4)).containKeyword(anyString(), anySet())
-        verify(sendTextUtilService, times(4)).sendText(anyLong(), anyString(), any())
+        verify(messageCheckerService, times(6)).doesMessageFit(any<String>(), any<Properties>())
+        verify(sendTextUtilService, times(6)).sendText(any<Long>(), any<String>(), anyOrNull())
         groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }

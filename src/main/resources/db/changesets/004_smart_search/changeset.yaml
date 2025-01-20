@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: "004"
+      author: "a.lashnev"
+      changes:
+        - sqlFile:
+            path: classpath:db/changesets/004_smart_search/delete_old_subscriptions_table.sql
+        - sqlFile:
+            path: classpath:db/changesets/004_smart_search/rename_keywords_to_subscriptions.sql
+        - sqlFile:
+            path: classpath:db/changesets/004_smart_search/create_table_for_searches.sql
+        - sqlFile:
+            path: classpath:db/changesets/004_smart_search/migrate_to_searches.sql

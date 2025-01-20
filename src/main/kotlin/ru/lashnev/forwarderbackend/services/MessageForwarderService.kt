@@ -6,7 +6,7 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.configurations.MessageFetcherProperties
-import ru.lashnev.forwarderbackend.messagefetcher.dto.MessageFetcherResponse
+import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
@@ -39,12 +39,11 @@ class MessageForwarderService(
                 val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }
                 response.messages.forEach { message ->
                     subscriptions.forEach { subscription ->
-                        val keywords = subscription.keywords.map { it.value }.toSet()
                         val subscriber = subscribers.find {
                             it.username == subscription.subscriber.username
                         } ?: throw  IllegalStateException("Cant find subscriber")
-                        logger.info("Check subscriber ${subscriber.username} with keywords $keywords")
-                        if (subscriber.chatId != null && messageCheckerService.containKeyword(message.value, keywords)) {
+                        logger.info("Check subscriber ${subscriber.username} with search ${subscription.search.properties}")
+                        if (subscriber.chatId != null && messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
                             val messageLink = "https://t.me/${group.name}/${message.key}"
                             val sendMessage = "${message.value} \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению]($messageLink)"
                             sendTextUtilService.sendText(subscriber.chatId, sendMessage)

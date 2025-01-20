@@ -28,10 +28,10 @@ class GetForDeleteSubscriptionsService(
             val buttonCallBack: CallbackQuery = update.callbackQuery()
             if (buttonCallBack.data() == deleteSubscriber.callbackData) {
                 deleteSubscriberButtonClicked(buttonCallBack)
-            } else if (buttonCallBack.data().contains(deleteKeyword.callbackData!!)) {
-                deleteKeywordButtonClicked(buttonCallBack)
             } else if (buttonCallBack.data().contains(deleteSubscription.callbackData!!)) {
                 deleteSubscriptionButtonClicked(buttonCallBack)
+            } else if (buttonCallBack.data().contains(deleteGroup.callbackData!!)) {
+                deleteGroupButtonClicked(buttonCallBack)
             }
             return
         }
@@ -41,15 +41,15 @@ class GetForDeleteSubscriptionsService(
         if (msg.text().toCommand() == AdminCommand.FETCH_SUBSCRIPTIONS) {
             val subscriptions = subscriptionDao.getSubscriptionsBySubscriber(telegramUser.username())
             val buttons = InlineKeyboardMarkup()
-            subscriptions.forEach { subscription ->
+            subscriptions.groupBy { it.group }.forEach { (group, subscriptionsByGroup) ->
                 buttons.addRow(
-                    InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME${subscription.group.name}")
-                        .callbackData("${deleteSubscription.callbackData}${subscription.group.name}")
+                    InlineKeyboardButton("$DELETE_GROUP_BUTTON_NAME${group.name}")
+                        .callbackData("${deleteGroup.callbackData}${group.name}")
                 )
-                subscription.keywords.forEach { keyword ->
+                subscriptionsByGroup.forEach { subscription ->
                     buttons.addRow(
-                        InlineKeyboardButton("$DELETE_KEYWORD_BUTTON_NAME ${keyword.value}")
-                            .callbackData("${deleteSubscription.callbackData}${subscription.group.name}${deleteKeyword.callbackData}${keyword.keywordId}")
+                        InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.search.properties}")
+                            .callbackData("${deleteGroup.callbackData}${subscription.group.name}${deleteSubscription.callbackData}${subscription.search.searchId}")
                     )
                 }
             }
@@ -64,29 +64,28 @@ class GetForDeleteSubscriptionsService(
         sendTextUtilService.sendText(callbackQuery.from().id(), DELETED)
     }
 
-    private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
-        val subscription = callbackQuery.data().replace(deleteSubscription.callbackData!!, "")
+    private fun deleteGroupButtonClicked(callbackQuery: CallbackQuery) {
+        val subscription = callbackQuery.data().replace(deleteGroup.callbackData!!, "")
         subscriptionDao.deleteSubscription(callbackQuery.from().username(), subscription)
         sendTextUtilService.sendText(callbackQuery.from().id(), "$DELETED $subscription")
     }
 
-    private fun deleteKeywordButtonClicked(callbackQuery: CallbackQuery) {
-        val subscription = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!).substringBefore(
-            deleteKeyword.callbackData!!)
-        val keywordSubscriptionId = callbackQuery.data().substringAfter(deleteKeyword.callbackData!!)
-        subscriptionDao.deleteKeyword(callbackQuery.from().username(), keywordSubscriptionId.toInt())
-        sendTextUtilService.sendText(callbackQuery.from().id(), DELETED_KEYWORD + subscription)
+    private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
+        val subscription = callbackQuery.data().substringAfter(deleteGroup.callbackData!!).substringBefore(deleteSubscription.callbackData!!)
+        val searchId = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!)
+        subscriptionDao.deleteSubscription(callbackQuery.from().username(), searchId.toInt())
+        sendTextUtilService.sendText(callbackQuery.from().id(), DELETED_SUBSCRIPTION + subscription)
     }
 
     companion object {
         val deleteSubscriber: InlineKeyboardButton = InlineKeyboardButton("Удалить все подписки").callbackData("delete-all")
-        val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("ds-")
-        val deleteKeyword: InlineKeyboardButton = InlineKeyboardButton("Удалить слово").callbackData("-dk-")
+        val deleteGroup: InlineKeyboardButton = InlineKeyboardButton("Удалить группу").callbackData("dg-")
+        val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("-ds-")
 
-        const val DELETED = "Удалено"
-        const val DELETED_KEYWORD = "Удалено ключевое слово из группы @"
-        const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить группу: @"
-        const val DELETE_KEYWORD_BUTTON_NAME = "Удалить слово: "
+        const val DELETED = "Удалена подписка на группу"
+        const val DELETED_SUBSCRIPTION = "Удалена подписка из группы @"
+        const val DELETE_GROUP_BUTTON_NAME = "Удалить группу: @"
+        const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить подписку: "
         const val YOUR_SUBSCRIPTIONS = "Ваши подписки"
     }
 }

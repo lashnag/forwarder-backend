@@ -4,9 +4,9 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.lashnev.forwarderbackend.BaseIT
@@ -23,13 +23,13 @@ class StartServiceTest : BaseIT() {
 
     @Test
     fun testStartBot() {
-        val messageCreateSubscription = mock(Message::class.java)
-        val createUpdate = mock(Update::class.java)
-        `when`(createUpdate.message()).thenReturn(messageCreateSubscription)
-        `when`(messageCreateSubscription.text()).thenReturn(AdminCommand.START.commandName)
-        `when`(messageCreateSubscription.from()).thenReturn(user)
+        val messageStart = mock<Message>()
+        val startUpdate = mock<Update>()
+        whenever(startUpdate.message()).thenReturn(messageStart)
+        whenever(messageStart.text()).thenReturn(AdminCommand.START.commandName)
+        whenever(messageStart.from()).thenReturn(user)
 
-        startService.processUpdates(createUpdate)
+        startService.processUpdates(startUpdate)
 
         verify(telegramBot).execute(captor.capture())
         assertEquals(WELCOME_MESSAGE, captor.value.entities().parameters["text"])
