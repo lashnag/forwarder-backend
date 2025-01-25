@@ -23,3 +23,16 @@ message-fetcher:
 telegram-bot-starter:
   bot:
     token: ${FORWARDER_BACKEND_BOT_SECRET_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    diskspace:
+      enabled: true
+      path: /
+      threshold: 1000MB
+    db:
+      enabled: true
