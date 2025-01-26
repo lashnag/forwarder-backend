@@ -16,6 +16,7 @@ import org.springframework.test.context.jdbc.Sql
 import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class CreateSubscriptionTest : BaseIT() {
@@ -129,6 +130,13 @@ class CreateSubscriptionTest : BaseIT() {
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
         assertEquals(2, savedSubscriptions.first().search.properties.keywords.size)
+        val savedSubscribers = subscribersDao.getSubscribers()
+        assertEquals(1, savedSubscribers.size)
+        assertEquals(testUsername, savedSubscribers.first().username)
+        assertNotNull(savedSubscribers.first().chatId)
+        val savedGroups = groupsDao.getValidGroups()
+        assertEquals(1, savedGroups.size)
+        assertTrue(VALID_GROUP_NAME.contains(savedGroups.first().name))
     }
 
     @Test

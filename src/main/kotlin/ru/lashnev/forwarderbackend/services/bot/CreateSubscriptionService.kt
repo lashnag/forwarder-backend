@@ -59,9 +59,9 @@ class CreateSubscriptionService(
         }
 
         val msg = update.message()
-        val telegramUser = update.message().from()
+        val telegramUser = msg.from()
         if (msg.text().toCommand() == AdminCommand.CREATE_SUBSCRIPTION) {
-            userContext[telegramUser.id()] = State(ProcessStage.ENTER_GROUP, Subscriber(msg.from().username(), msg.from().id()))
+            userContext[telegramUser.id()] = State(ProcessStage.ENTER_GROUP, Subscriber(telegramUser.username(), telegramUser.id()))
             sendTextUtilService.sendText(telegramUser.id(), ENTER_GROUP_NAME, replyMarkup = InlineKeyboardMarkup().addRow(cancelButton))
             return
         }
