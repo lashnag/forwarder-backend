@@ -82,7 +82,7 @@ class GetForDeleteSubscriptionsService(
         val deleteGroup: InlineKeyboardButton = InlineKeyboardButton("Удалить группу").callbackData("dg-")
         val deleteSubscription: InlineKeyboardButton = InlineKeyboardButton("Удалить подписку").callbackData("-ds-")
 
-        const val DELETED = "Удалена подписка на группу"
+        const val DELETED = "Удалены все подписки"
         const val DELETED_SUBSCRIPTION = "Удалена подписка из группы @"
         const val DELETE_GROUP_BUTTON_NAME = "Удалить группу: @"
         const val DELETE_SUBSCRIPTION_BUTTON_NAME = "Удалить подписку: "
