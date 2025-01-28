@@ -34,6 +34,10 @@ class MessageForwarderService(
                     "${messageFetcherProperties.url}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
                     MessageFetcherResponse::class.java
                 ).body
+
+                logger.info("Send request ${messageFetcherProperties.url}?subscription=${group.name}&last_message_id=${group.lastMessageId}")
+                logger.info("Got response: $response")
+
                 checkNotNull(response) { "Response body is null" }
 
                 val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }
