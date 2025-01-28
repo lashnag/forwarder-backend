@@ -54,7 +54,7 @@ class MessageForwarderService(
                         }
                     }
                 }
-                response.messages.keys.lastOrNull()?.let { lastMessageId ->
+                response.messages.keys.maxOrNull()?.let { lastMessageId ->
                     groupsDao.setLastGroupMessage(group.name, lastMessageId)
                 }
             } catch (e: HttpClientErrorException) {
