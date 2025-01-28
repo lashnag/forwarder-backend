@@ -66,7 +66,7 @@ class CreateSubscriptionService(
             return
         }
 
-        val userState = checkNotNull(userContext[telegramUser.id()])
+        val userState = userContext[telegramUser.id()] ?: return
         when (userState.stage) {
             ProcessStage.ENTER_GROUP -> groupEntered(msg)
             ProcessStage.ENTER_SEARCH_KEYWORD,
