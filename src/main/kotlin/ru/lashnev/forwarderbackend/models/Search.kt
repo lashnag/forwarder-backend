@@ -8,9 +8,9 @@ data class Properties(
     override fun toString(): String {
         val result = mutableListOf<String>()
 
-        if (keywords.isNotEmpty()) result.add("Слова для поиска = $keywords")
-        if (maxMoney != null) result.add("Сумма для поиска = $maxMoney")
+        if (keywords.isNotEmpty()) result.add("Слова = $keywords")
+        if (maxMoney != null) result.add("Сумма = $maxMoney")
 
-        return result.joinToString(", ", prefix = "Ищем: ")
+        return result.joinToString(", ")
     }
 }
