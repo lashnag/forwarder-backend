@@ -13,4 +13,4 @@ message-fetcher:
 
 telegram-bot-starter:
   bot:
-    token: your_token
+    token: your_bot_token
