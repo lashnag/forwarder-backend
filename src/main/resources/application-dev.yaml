@@ -13,4 +13,4 @@ message-fetcher:
 
 telegram-bot-starter:
   bot:
-    token: 7990515025:AAHo9MyYefC6mVmoykCSs40asp-vp8Bdk9c
+    token: your_token
