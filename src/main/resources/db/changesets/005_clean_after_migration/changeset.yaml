@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: "005"
+      author: "a.lashnev"
+      changes:
+        - sqlFile:
+            path: classpath:db/changesets/005_clean_after_migration/set_search_id_not_null_and_add_unique_key.sql

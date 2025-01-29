@@ -46,7 +46,9 @@ class MessageForwarderService(
                         logger.info("Check subscriber ${subscriber.username} with search ${subscription.search.properties}")
                         if (subscriber.chatId != null && messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
                             val messageLink = "https://t.me/${group.name}/${message.key}"
-                            val sendMessage = "${message.value} \n\n Сообщение переслано из группы: @${group.name} \n [Перейти к сообщению]($messageLink)"
+                            val sendMessage = "${message.value} \n\n Сообщение переслано из группы: @${group.name}" +
+                                    "\n [Перейти к сообщению]($messageLink)" +
+                                    "\n Сообщение соответствует правилу ${subscription.search.properties}"
                             sendTextUtilService.sendText(subscriber.chatId, sendMessage)
                         }
                     }

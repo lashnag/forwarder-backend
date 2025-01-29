@@ -7,3 +7,5 @@ databaseChangeLog:
       file: classpath:db/changesets/003_using_bot_as_forwarder/changeset.yaml
   - include:
       file: classpath:db/changesets/004_smart_search/changeset.yaml
+  - include:
+      file: classpath:db/changesets/005_clean_after_migration/changeset.yaml
