@@ -1,6 +1,6 @@
 <configuration>
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>logstash:5000</destination>
+        <destination>logstash:5022</destination>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
