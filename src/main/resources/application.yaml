@@ -36,3 +36,7 @@ management:
       threshold: 1000MB
     db:
       enabled: true
+
+logging:
+  level:
+    root: INFO
