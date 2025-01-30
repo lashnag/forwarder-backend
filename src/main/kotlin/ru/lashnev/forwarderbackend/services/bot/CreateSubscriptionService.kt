@@ -212,7 +212,7 @@ class CreateSubscriptionService(
         val cancelButton: InlineKeyboardButton = InlineKeyboardButton("Отмена").callbackData("cancel")
 
         val keywordButton: InlineKeyboardButton = InlineKeyboardButton("Ключевое слово").callbackData("keyword")
-        const val ENTER_KEYWORD = "Введите ключевое слово для поиска (вводить можно в любой форме один раз)"
+        const val ENTER_KEYWORD = "Введите ключевое слово для поиска (вводить можно в любой форме один раз и в любом регистре)"
 
         val maxMoneyButton: InlineKeyboardButton = InlineKeyboardButton("Максимальная сумма").callbackData("max-money")
         const val ENTER_MAX_MONEY = "Введите максимальную сумму поиск (целое число)"

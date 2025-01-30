@@ -1,6 +1,9 @@
 package ru.lashnev.forwarderbackend.models
 
+import com.fasterxml.jackson.annotation.JsonInclude
+
 data class Search(val searchId: Int? = null, val properties: Properties)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Properties(
     val keywords: MutableList<String> = mutableListOf(),
     var maxMoney: Long? = null,

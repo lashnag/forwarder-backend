@@ -12,7 +12,9 @@
     <springProfile name="!dev">
         <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
             <destination>logstash:5022</destination>
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"application": "forwarder-backend"}</customFields>
+            </encoder>
         </appender>
         <root level="info">
             <appender-ref ref="LOGSTASH" />
