@@ -1,10 +1,21 @@
 <configuration>
-    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>logstash:5022</destination>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-    </appender>
-
-    <root level="info">
-        <appender-ref ref="LOGSTASH" />
-    </root>
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <root level="debug">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+    <springProfile name="!dev">
+        <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>logstash:5022</destination>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        </appender>
+        <root level="info">
+            <appender-ref ref="LOGSTASH" />
+        </root>
+    </springProfile>
 </configuration>
