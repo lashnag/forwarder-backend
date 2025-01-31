@@ -34,19 +34,16 @@ class MessageForwarderService(
 
                 checkNotNull(response) { "Response body is null" }
 
-                val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }
+                val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }.filterNot { it.subscriber.chatId == null }
                 response.messages.forEach { message ->
                     val usersGotThisMessage = mutableSetOf<Long>()
                     subscriptions.forEach { subscription ->
+                        logger.info("Check subscriber ${subscription.subscriber.username} with search ${subscription.search.properties}")
                         if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                             logger.info("Subscriber already got message.")
                         } else {
-                            logger.info("Check subscriber ${subscription.subscriber.username} with search ${subscription.search.properties}")
-                            if (subscription.subscriber.chatId != null && messageCheckerService.doesMessageFit(
-                                    message.value,
-                                    subscription.search.properties
-                                )
-                            ) {
+                            checkNotNull(subscription.subscriber.chatId)
+                            if (messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
                                 usersGotThisMessage.add(subscription.subscriber.chatId)
                                 val messageLink = "https://t.me/${group.name}/${message.key}"
                                 val messageWithAdditionalData = message.value +
