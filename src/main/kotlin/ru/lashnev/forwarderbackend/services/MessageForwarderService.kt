@@ -62,7 +62,7 @@ class MessageForwarderService(
                     groupsDao.setLastGroupMessage(group.name, lastMessageId)
                 }
             } catch (e: HttpClientErrorException) {
-                logger.warn("Invalid group ${group.name}")
+                logger.error("Invalid group ${group.name}", e)
                 groupsDao.setGroupInvalid(group.name)
             } catch (e: RestClientException) {
                 logger.error(e.message, e)
