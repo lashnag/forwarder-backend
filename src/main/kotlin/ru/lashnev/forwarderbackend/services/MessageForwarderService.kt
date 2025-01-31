@@ -48,7 +48,7 @@ class MessageForwarderService(
                             val messageLink = "https://t.me/${group.name}/${message.key}"
                             val message = message.value +
                                     "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
-                                    "\n Поиск по: ${subscription.search.properties}"
+                                    "\nПоиск по: ${subscription.search.properties}"
                             sendTextUtilService.sendText(who = subscriber.chatId, what = message, useMarkdown = true)
                         }
                     }

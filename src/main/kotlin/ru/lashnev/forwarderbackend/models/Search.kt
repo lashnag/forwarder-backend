@@ -11,7 +11,7 @@ data class Properties(
     override fun toString(): String {
         val result = mutableListOf<String>()
 
-        if (keywords.isNotEmpty()) result.add("Слова = $keywords")
+        if (keywords.isNotEmpty()) result.add("Слова = [${keywords.joinToString(", ")}]")
         if (maxMoney != null) result.add("Сумма = $maxMoney")
 
         return result.joinToString(", ")
