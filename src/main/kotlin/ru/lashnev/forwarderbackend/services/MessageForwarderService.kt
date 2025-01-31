@@ -8,7 +8,6 @@ import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.configurations.MessageFetcherProperties
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.dao.GroupsDao
-import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.logger
@@ -17,7 +16,6 @@ import ru.lashnev.forwarderbackend.utils.logger
 class MessageForwarderService(
     private val restTemplate: RestTemplate,
     private val groupsDao: GroupsDao,
-    private val subscribersDao: SubscribersDao,
     private val subscriptionDao: SubscriptionDao,
     private val messageCheckerService: MessageCheckerService,
     private val messageFetcherProperties: MessageFetcherProperties,
@@ -26,7 +24,6 @@ class MessageForwarderService(
 
     @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     fun processMessages() {
-        val subscribers = subscribersDao.getSubscribers()
         groupsDao.getValidGroups().forEach { group ->
             try {
                 logger.info("Processing group ${group.name}")
@@ -39,17 +36,28 @@ class MessageForwarderService(
 
                 val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }
                 response.messages.forEach { message ->
+                    val usersGotThisMessage = mutableSetOf<Long>()
                     subscriptions.forEach { subscription ->
-                        val subscriber = subscribers.find {
-                            it.username == subscription.subscriber.username
-                        } ?: throw  IllegalStateException("Cant find subscriber")
-                        logger.info("Check subscriber ${subscriber.username} with search ${subscription.search.properties}")
-                        if (subscriber.chatId != null && messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
-                            val messageLink = "https://t.me/${group.name}/${message.key}"
-                            val message = message.value +
-                                    "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
-                                    "\nПоиск по: ${subscription.search.properties}"
-                            sendTextUtilService.sendText(who = subscriber.chatId, what = message, useMarkdown = true)
+                        if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
+                            logger.info("Subscriber already got message.")
+                        } else {
+                            logger.info("Check subscriber ${subscription.subscriber.username} with search ${subscription.search.properties}")
+                            if (subscription.subscriber.chatId != null && messageCheckerService.doesMessageFit(
+                                    message.value,
+                                    subscription.search.properties
+                                )
+                            ) {
+                                usersGotThisMessage.add(subscription.subscriber.chatId)
+                                val messageLink = "https://t.me/${group.name}/${message.key}"
+                                val messageWithAdditionalData = message.value +
+                                        "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
+                                        "\nПоиск по: ${subscription.search.properties}"
+                                sendTextUtilService.sendText(
+                                    who = subscription.subscriber.chatId,
+                                    what = messageWithAdditionalData,
+                                    useMarkdown = true
+                                )
+                            }
                         }
                     }
                 }

@@ -1,5 +1,5 @@
 <configuration>
-    <springProfile name="dev">
+    <springProfile name="dev | test">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
@@ -9,7 +9,7 @@
             <appender-ref ref="CONSOLE" />
         </root>
     </springProfile>
-    <springProfile name="!dev">
+    <springProfile name="prod">
         <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
             <destination>logstash:5022</destination>
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">

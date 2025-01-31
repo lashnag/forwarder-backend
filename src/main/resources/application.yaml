@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  profiles:
+    active: prod
   liquibase:
     change-log: classpath:/db/changelog.yaml
   datasource:

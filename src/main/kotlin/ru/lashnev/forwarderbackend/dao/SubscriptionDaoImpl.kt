@@ -37,7 +37,7 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
             .getValue(GROUPS.GROUP_ID)
 
         val searchId = dsl.insertInto(SEARCHES)
-            .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties).lowercase())
+            .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties))
             .onConflict(SEARCHES.PROPERTIES)
             .doNothing()
             .returning()

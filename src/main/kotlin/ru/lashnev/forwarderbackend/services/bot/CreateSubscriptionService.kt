@@ -178,7 +178,7 @@ class CreateSubscriptionService(
                 userState.search = Search(null, it)
             }
             when(userState.stage) {
-                ProcessStage.ENTER_SEARCH_KEYWORD -> properties.keywords.add(msg.text())
+                ProcessStage.ENTER_SEARCH_KEYWORD -> properties.keywords.add(msg.text().lowercase())
                 ProcessStage.ENTER_SEARCH_MAX_MONEY -> properties.maxMoney = msg.text().toLong()
                 else -> throw IllegalStateException("State is ${userState.stage}")
             }
