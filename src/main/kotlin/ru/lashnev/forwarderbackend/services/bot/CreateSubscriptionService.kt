@@ -146,6 +146,7 @@ class CreateSubscriptionService(
                 ) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
                 userState.group = Group(
                     msg.text()
+                        .lowercase()
                         .replace(DOMAIN_IN_TELEGRAM_LINK, "")
                         .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
                         .replace(DOMAIN_WEB_TELEGRAM_LINK, ""),
