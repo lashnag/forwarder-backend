@@ -2,3 +2,9 @@ telegram-forwarder-user: resenderuser
 telegram-bot-starter:
   bot:
     token: test-bot-secret-key
+
+spring:
+  security:
+    user:
+      name: admin
+      password: admin

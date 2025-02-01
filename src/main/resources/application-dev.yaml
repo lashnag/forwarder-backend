@@ -7,6 +7,10 @@ spring:
     url: "jdbc:postgresql://localhost:5433/telegram_forwarder"
     username: test
     password: test
+  security:
+    user:
+      name: admin
+      password: admin
 
 message-fetcher:
   url: http://sender:4322/get-subscription-messages

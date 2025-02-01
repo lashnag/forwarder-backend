@@ -18,6 +18,11 @@ spring:
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
+  security:
+    user:
+      name: ${BACKEND_BASIC_AUTH_USER}
+      password: ${BACKEND_BASIC_AUTH_PASSWORD}
+
 
 message-fetcher:
   url: http://sender:4322/get-subscription-messages
