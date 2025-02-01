@@ -38,11 +38,11 @@ class MessageForwarderService(
                 response.messages.forEach { message ->
                     val usersGotThisMessage = mutableSetOf<Long>()
                     subscriptions.forEach { subscription ->
-                        logger.info("Check subscriber ${subscription.subscriber.username} with search ${subscription.search.properties}")
+                        checkNotNull(subscription.subscriber.chatId)
+                        logger.info("Check subscriber ${subscription.subscriber.username} ${subscription.subscriber.chatId} with search ${subscription.search.properties}")
                         if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
-                            logger.info("Subscriber already got message.")
+                            logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                         } else {
-                            checkNotNull(subscription.subscriber.chatId)
                             if (messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
                                 usersGotThisMessage.add(subscription.subscriber.chatId)
                                 val messageLink = "https://t.me/${group.name}/${message.key}"
@@ -65,6 +65,8 @@ class MessageForwarderService(
                 logger.error("Invalid group ${group.name}", e)
                 groupsDao.setGroupInvalid(group.name)
             } catch (e: RestClientException) {
+                logger.warn(e.message, e)
+            } catch (e: Exception) {
                 logger.error(e.message, e)
             }
         }
