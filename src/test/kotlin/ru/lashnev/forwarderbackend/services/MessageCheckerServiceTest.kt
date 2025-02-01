@@ -19,24 +19,25 @@ class MessageCheckerServiceTest {
     }
 
     @Test
-    fun testDoesMessageFitSentenceKeyword() {
+    fun testDoesMessageFitAFewKeyword() {
         val message = "Шла Саша по шоссе и сосала сушку"
-        val keyword = "Сушка шоссе"
+        val keyword1 = "Сушка"
+        val keyword2 = "шоссе"
 
-        val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword)))
+        val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword1, keyword2)))
 
         assertThat(result).isTrue()
     }
 
     @Test
-    fun testDoesMessageFitAFewKeywords() {
+    fun testDoesNotMessageFitAFewKeywords() {
         val message = "Шла Саша по шоссе и сосала сушку"
         val keyword1 = "Сушка"
         val keyword2 = "Собака"
 
         val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword1, keyword2)))
 
-        assertThat(result).isTrue()
+        assertThat(result).isFalse()
     }
 
     @Test

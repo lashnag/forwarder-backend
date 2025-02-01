@@ -17,18 +17,8 @@ class MessageCheckerService {
             .filterNot { it.isEmpty() }
             .map { it.stem() }
             .map { it.lowercase() }
-
-
-        keywords.forEach { keyword ->
-            val keywordLemmas = keyword.split(Regex("[\\s,!?.]+"))
-                .filterNot { it.isEmpty() }
-                .map { it.stem() }
-                .map { it.lowercase() }
-            if (messageLemmas.containsAll(keywordLemmas)) {
-                return true
-            }
-        }
-        return false
+        val keywordsLemmas = keywords.map { it.stem().lowercase() }
+        return messageLemmas.containsAll(keywordsLemmas)
     }
 
     private fun hasAmountLessThan(message: String, maxAmount: Long): Boolean {
