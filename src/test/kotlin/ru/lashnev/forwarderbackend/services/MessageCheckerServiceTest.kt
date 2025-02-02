@@ -87,4 +87,14 @@ class MessageCheckerServiceTest {
 
         assertThat(result).isTrue()
     }
+
+    @Test
+    fun testMessageWithMarkdownFitKeyword() {
+        val message = "из Барнаула на **Пхукет** за 32 000 р. RT (февраль)\\nAzur Air, прямые рейсы с багажом - https://smkt.us/ekrax"
+        val keyword = "пхукет"
+
+        val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword)))
+
+        assertThat(result).isTrue()
+    }
 }

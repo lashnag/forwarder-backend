@@ -1,15 +1,20 @@
 package ru.lashnev.forwarderbackend.services
 
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.Node
+import com.vladsch.flexmark.util.data.MutableDataSet
 import org.springframework.stereotype.Service
-import org.tartarus.snowball.ext.RussianStemmer
 import org.tartarus.snowball.ext.EnglishStemmer
+import org.tartarus.snowball.ext.RussianStemmer
 import ru.lashnev.forwarderbackend.models.Properties
 
 @Service
 class MessageCheckerService {
     fun doesMessageFit(message: String, searchProperties: Properties): Boolean {
-        return (searchProperties.keywords.isEmpty() || containAllWords(message, searchProperties.keywords))
-            && (searchProperties.maxMoney == null || hasAmountLessThan(message, searchProperties.maxMoney!!))
+        val cleanMessage = removeMarkdown(message)
+        return (searchProperties.keywords.isEmpty() || containAllWords(cleanMessage, searchProperties.keywords))
+            && (searchProperties.maxMoney == null || hasAmountLessThan(cleanMessage, searchProperties.maxMoney!!))
     }
 
     private fun containAllWords(message: String, keywords: List<String>): Boolean {
@@ -49,6 +54,16 @@ class MessageCheckerService {
     private fun isRussian(message: String): Boolean {
         val regex = Regex("[а-яА-ЯёЁ]+")
         return regex.containsMatchIn(message)
+    }
+
+    private fun removeMarkdown(text: String): String {
+        val options = MutableDataSet()
+        val parser = Parser.builder(options).build()
+        val renderer = HtmlRenderer.builder(options).build()
+
+        val document: Node = parser.parse(text)
+
+        return renderer.render(document).replace(Regex("<.*?>"), "")
     }
 
     companion object {
