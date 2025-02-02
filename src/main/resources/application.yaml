@@ -30,6 +30,9 @@ message-fetcher:
 telegram-bot-starter:
   bot:
     token: ${FORWARDER_BACKEND_BOT_SECRET_KEY}
+scheduler:
+  pool-size:
+    3
 
 management:
   endpoints:

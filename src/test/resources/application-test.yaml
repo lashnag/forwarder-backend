@@ -1,7 +1,9 @@
-telegram-forwarder-user: resenderuser
 telegram-bot-starter:
   bot:
     token: test-bot-secret-key
+scheduler:
+  pool-size:
+    3
 
 spring:
   security:

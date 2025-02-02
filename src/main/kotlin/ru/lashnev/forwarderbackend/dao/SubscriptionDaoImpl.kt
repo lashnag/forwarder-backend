@@ -27,19 +27,26 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
             .fetchOne()!!
             .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        val groupId = dsl.insertInto(GROUPS)
-            .set(GROUPS.GROUPNAME, subscription.group.name)
-            .onConflict(GROUPS.GROUPNAME)
-            .doUpdate()
+        val existingGroupId = dsl.select(GROUPS.GROUP_ID)
+            .from(GROUPS)
+            .where(GROUPS.GROUPNAME.eq(subscription.group.name))
+            .fetchOne()
+            ?.getValue(GROUPS.GROUP_ID)
+
+        val groupId = existingGroupId ?: dsl.insertInto(GROUPS)
             .set(GROUPS.GROUPNAME, subscription.group.name)
             .returning()
             .fetchOne()!!
             .getValue(GROUPS.GROUP_ID)
 
-        val searchId = dsl.insertInto(SEARCHES)
+        val existingSearchId = dsl.select(SEARCHES.SEARCH_ID)
+            .from(SEARCHES)
+            .where(SEARCHES.PROPERTIES.eq(objectMapper.writeValueAsString(subscription.search.properties)))
+            .fetchOne()
+            ?.getValue(SEARCHES.SEARCH_ID)
+
+        val searchId = existingSearchId ?: dsl.insertInto(SEARCHES)
             .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties))
-            .onConflict(SEARCHES.PROPERTIES)
-            .doNothing()
             .returning()
             .fetchOne()!!
             .getValue(SEARCHES.SEARCH_ID)
