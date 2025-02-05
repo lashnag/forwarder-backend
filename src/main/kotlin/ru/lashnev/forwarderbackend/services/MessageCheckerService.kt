@@ -27,8 +27,13 @@ class MessageCheckerService {
     }
 
     private fun hasAmountLessThan(message: String, maxAmount: Long): Boolean {
-        val regex = Regex("\\d{2,}")
-        val matches = regex.findAll(message)
+        val regex = Regex("\\d{3,}")
+        val matches = regex.findAll(
+            message
+                .replace(" ", "")
+                .replace(".", "")
+                .replace(",", "")
+        )
 
         for (match in matches) {
             if (match.value.toLong() < maxAmount) {

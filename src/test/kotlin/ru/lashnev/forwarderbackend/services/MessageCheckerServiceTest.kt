@@ -70,6 +70,24 @@ class MessageCheckerServiceTest {
     }
 
     @Test
+    fun testDoesMessageWithSpaceFitMaxMoney() {
+        val message = "Москва - Краснодар 1 000 рублей"
+
+        val result = messageCheckerService.doesMessageFit(message, Properties(maxMoney = 1500))
+
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun testDoesMessageWithCommaFitMaxMoney() {
+        val message = "Москва - Краснодар 1,000 рублей"
+
+        val result = messageCheckerService.doesMessageFit(message, Properties(maxMoney = 1500))
+
+        assertThat(result).isTrue()
+    }
+
+    @Test
     fun testDoesNotMessageFitMaxMoney() {
         val message = "Москва - Краснодар 1500 рублей"
 
