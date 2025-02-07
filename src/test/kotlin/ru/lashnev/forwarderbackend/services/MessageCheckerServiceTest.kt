@@ -2,11 +2,14 @@ package ru.lashnev.forwarderbackend.services
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.Properties
 
-class MessageCheckerServiceTest {
+class MessageCheckerServiceTest : BaseIT() {
 
-    private val messageCheckerService = MessageCheckerService()
+    @Autowired
+    private lateinit var messageCheckerService: MessageCheckerService
 
     @Test
     fun testDoesMessageFit() {
@@ -110,6 +113,16 @@ class MessageCheckerServiceTest {
     fun testMessageWithMarkdownFitKeyword() {
         val message = "из Барнаула на **Пхукет** за 32 000 р. RT (февраль)\\nAzur Air, прямые рейсы с багажом - https://smkt.us/ekrax"
         val keyword = "пхукет"
+
+        val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword)))
+
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun test() {
+        val message = "Подешевело! Прямые рейсы из Египта в Тюмень, Челябинск и Н.Новгород от 5600₽ в одну сторону"
+        val keyword = "египет"
 
         val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword)))
 

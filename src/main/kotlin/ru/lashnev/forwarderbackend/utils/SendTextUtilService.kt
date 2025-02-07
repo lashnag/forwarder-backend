@@ -18,7 +18,10 @@ class SendTextUtilService(private val bot: TelegramBot) {
         }
 
         try {
-            bot.execute(smBuilder)
+            val response = bot.execute(smBuilder)
+            if (response.errorCode() != 200) {
+                throw RuntimeException("Cant send message, error code: ${response.errorCode()}, error message: ${response.description()}")
+            }
         } catch (e: Exception) {
             throw RuntimeException(e)
         }

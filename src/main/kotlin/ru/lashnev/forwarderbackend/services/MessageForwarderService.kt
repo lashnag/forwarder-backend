@@ -52,7 +52,6 @@ class MessageForwarderService(
                                 sendTextUtilService.sendText(
                                     who = subscription.subscriber.chatId,
                                     what = messageWithAdditionalData,
-                                    useMarkdown = true
                                 )
                             }
                         }

@@ -5,12 +5,10 @@ import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.ast.Node
 import com.vladsch.flexmark.util.data.MutableDataSet
 import org.springframework.stereotype.Service
-import org.tartarus.snowball.ext.EnglishStemmer
-import org.tartarus.snowball.ext.RussianStemmer
 import ru.lashnev.forwarderbackend.models.Properties
 
 @Service
-class MessageCheckerService {
+class MessageCheckerService(private val lemmatizerService: LemmatizerService) {
     fun doesMessageFit(message: String, searchProperties: Properties): Boolean {
         val cleanMessage = removeMarkdown(message)
         return (searchProperties.keywords.isEmpty() || containAllWords(cleanMessage, searchProperties.keywords))
@@ -18,11 +16,10 @@ class MessageCheckerService {
     }
 
     private fun containAllWords(message: String, keywords: List<String>): Boolean {
-        val messageLemmas = message.split(Regex("[\\s,!?.]+"))
+        val messageLemmas = lemmatizerService.normalize(message).split(Regex("[\\s,!?.]+"))
             .filterNot { it.isEmpty() }
-            .map { it.stem() }
             .map { it.lowercase() }
-        val keywordsLemmas = keywords.map { it.stem().lowercase() }
+        val keywordsLemmas = keywords.map { lemmatizerService.normalize(it).lowercase() }
         return messageLemmas.containsAll(keywordsLemmas)
     }
 
@@ -44,23 +41,6 @@ class MessageCheckerService {
         return false
     }
 
-    private fun String.stem(): String {
-        return if (isRussian(this)) {
-            russianStemmer.current = this
-            russianStemmer.stem()
-            russianStemmer.current
-        } else {
-            englishStemmer.current = this
-            englishStemmer.stem()
-            englishStemmer.current
-        }
-    }
-
-    private fun isRussian(message: String): Boolean {
-        val regex = Regex("[а-яА-ЯёЁ]+")
-        return regex.containsMatchIn(message)
-    }
-
     private fun removeMarkdown(text: String): String {
         val options = MutableDataSet()
         val parser = Parser.builder(options).build()
@@ -69,10 +49,5 @@ class MessageCheckerService {
         val document: Node = parser.parse(text)
 
         return renderer.render(document).replace(Regex("<.*?>"), "")
-    }
-
-    companion object {
-        val russianStemmer = RussianStemmer()
-        val englishStemmer = EnglishStemmer()
     }
 }

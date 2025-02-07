@@ -13,7 +13,7 @@ spring:
       password: admin
 
 message-fetcher:
-  url: http://sender:4322/get-subscription-messages
+  url: http://127.0.0.1:4322/get-subscription-messages
 
 telegram-bot-starter:
   bot:
