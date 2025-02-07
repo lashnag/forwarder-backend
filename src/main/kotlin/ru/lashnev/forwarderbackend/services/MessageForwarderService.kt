@@ -24,6 +24,7 @@ class MessageForwarderService(
 
     @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     fun processMessages() {
+        logger.info("Start forwarder scheduler")
         groupsDao.getValidGroups().forEach { group ->
             try {
                 logger.info("Processing group ${group.name}")

@@ -14,6 +14,4 @@ class PythonLemmatizerService : LemmatizerService {
         val pythonCommand = arrayOf("python", "src/main/python/lemmatizer.py", sentence)
         return runCommandAndWaitResult(pythonCommand)
     }
-
-
 }
