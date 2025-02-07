@@ -4,6 +4,8 @@ from pymystem3 import Mystem
 app = Flask("Lemmatizer")
 mystem = Mystem()
 
+print("Server started")
+
 @app.route('/lemmatize', methods=['POST'])
 def lemmatize():
     data = request.get_json()
