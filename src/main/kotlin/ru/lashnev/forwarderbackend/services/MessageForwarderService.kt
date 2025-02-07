@@ -6,9 +6,10 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.configurations.MessageFetcherProperties
-import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
+import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
+import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.logger
 
@@ -25,7 +26,13 @@ class MessageForwarderService(
     @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     fun processMessages() {
         logger.info("Start forwarder scheduler")
-        groupsDao.getValidGroups().forEach { group ->
+        val groups = try {
+            groupsDao.getValidGroups()
+        } catch (e: Exception) {
+            logger.error("Cant get group: ", e)
+            return
+        }
+        groups.forEach { group ->
             try {
                 logger.info("Processing group ${group.name}")
                 val response = restTemplate.getForEntity(
