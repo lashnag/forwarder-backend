@@ -1,5 +1,6 @@
 package ru.lashnev.forwarderbackend.services
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
@@ -9,7 +10,6 @@ import ru.lashnev.forwarderbackend.configurations.MessageFetcherProperties
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
-import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.logger
 
@@ -23,7 +23,10 @@ class MessageForwarderService(
     private val sendTextUtilService: SendTextUtilService,
 ) {
 
-    @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
+    @Value("\${scheduler.antispam-delay}")
+    private lateinit var antispamDelay: String
+
+    @Scheduled(fixedDelay = 5_000, initialDelay = 30_000)
     fun processMessages() {
         logger.info("Start forwarder scheduler")
         val groups = try {
@@ -68,6 +71,7 @@ class MessageForwarderService(
                 response.messages.keys.maxOrNull()?.let { lastMessageId ->
                     groupsDao.setLastGroupMessage(group.name, lastMessageId)
                 }
+                Thread.sleep(antispamDelay.toLong())
             } catch (e: HttpClientErrorException) {
                 logger.error("Invalid group ${group.name}", e)
                 groupsDao.setGroupInvalid(group.name)

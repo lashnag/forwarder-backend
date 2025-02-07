@@ -1,6 +1,5 @@
 package ru.lashnev.forwarderbackend.services.bot
 
-import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
@@ -11,7 +10,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.jdbc.Sql
 import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.AdminCommand
@@ -23,9 +21,6 @@ class CreateSubscriptionTest : BaseIT() {
 
     @Autowired
     private lateinit var createSubscriptionService: CreateSubscriptionService
-
-    @MockBean
-    private lateinit var telegramBot: TelegramBot
 
     @Test
     fun testCreateSubscriptionSearchByTwoKeywords() {

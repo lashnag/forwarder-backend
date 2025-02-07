@@ -1,14 +1,18 @@
 package ru.lashnev.forwarderbackend
 
+import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.User
 import com.pengrad.telegrambot.request.SendMessage
+import com.pengrad.telegrambot.response.SendResponse
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -30,13 +34,19 @@ class BaseIT {
     @Autowired
     protected lateinit var groupsDao: GroupsDao
 
-    protected val user = mock(User::class.java)
+    @MockBean
+    protected lateinit var telegramBot: TelegramBot
+
+    protected val user = mock<User>()
     protected val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)
 
     @BeforeEach
     fun setUp() {
-        `when`(user.id()).thenReturn(1)
-        `when`(user.username()).thenReturn(testUsername)
+        whenever(user.id()).thenReturn(1)
+        whenever(user.username()).thenReturn(testUsername)
+        val messageResponse = mock<SendResponse>()
+        whenever(messageResponse.errorCode()).thenReturn(0)
+        whenever(telegramBot.execute(any<SendMessage>())).thenReturn(messageResponse)
     }
 
     @AfterEach

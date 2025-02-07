@@ -1,6 +1,5 @@
 package ru.lashnev.forwarderbackend.services.bot
 
-import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import org.junit.jupiter.api.Test
@@ -8,7 +7,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import kotlin.test.assertTrue
@@ -16,9 +14,6 @@ import kotlin.test.assertTrue
 class ChangelogServiceTest : BaseIT() {
     @Autowired
     private lateinit var changelogService: ChangelogService
-
-    @MockBean
-    private lateinit var telegramBot: TelegramBot
 
     @Test
     fun testShowChangelog() {
