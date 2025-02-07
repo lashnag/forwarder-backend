@@ -3,13 +3,14 @@ package ru.lashnev.forwarderbackend.services
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import ru.lashnev.forwarderbackend.utils.runCommandAndWaitResult
 
 @Service
 @Primary
 class PythonClientLemmatizerService(private val restTemplate: RestTemplate) : LemmatizerService {
     init {
         val pipInstallCommand = arrayOf("pip", "install", "-r", "requirements.txt")
-        Runtime.getRuntime().exec(pipInstallCommand)
+        runCommandAndWaitResult(pipInstallCommand)
         val pythonCommand = arrayOf("python", "src/main/python/lemmatizer_server.py")
         Runtime.getRuntime().exec(pythonCommand)
     }
