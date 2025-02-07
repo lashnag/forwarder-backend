@@ -11,7 +11,9 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y python3 python3-pip && apt-get clean
+RUN apt-get update && apt-get install -y python3 python3-pip && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    apt-get clean
 
 COPY --from=build /app/target/ForwarderBackend-2.0.0.jar ForwarderBackend.jar
 
