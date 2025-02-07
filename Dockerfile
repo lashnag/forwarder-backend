@@ -17,5 +17,6 @@ RUN apt-get update && apt-get install -y python3 python3-pip && \
 
 COPY --from=build /app/target/ForwarderBackend-2.0.0.jar ForwarderBackend.jar
 COPY --from=build /app/requirements.txt requirements.txt
+COPY --from=build /app/src/main/python src/main/python
 
 ENTRYPOINT ["sh", "-c", "sleep 30; exec java -jar ForwarderBackend.jar"]
