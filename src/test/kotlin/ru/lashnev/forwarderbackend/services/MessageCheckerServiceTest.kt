@@ -120,7 +120,7 @@ class MessageCheckerServiceTest : BaseIT() {
     }
 
     @Test
-    fun test() {
+    fun testSentenceWithOtherDeclensionFitKeyword() {
         val message = "Подешевело! Прямые рейсы из Египта в Тюмень, Челябинск и Н.Новгород от 5600₽ в одну сторону"
         val keyword = "египет"
 
