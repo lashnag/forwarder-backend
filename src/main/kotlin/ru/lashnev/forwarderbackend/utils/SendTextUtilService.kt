@@ -5,6 +5,7 @@ import com.pengrad.telegrambot.model.request.Keyboard
 import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
 import org.springframework.stereotype.Service
+import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 
 @Service
 class SendTextUtilService(private val bot: TelegramBot) {
@@ -18,13 +19,12 @@ class SendTextUtilService(private val bot: TelegramBot) {
             smBuilder.parseMode(ParseMode.Markdown)
         }
 
-        try {
-            val response = bot.execute(smBuilder)
-            if (response.errorCode() != 0) {
-                logger.warn("Cant send message to $who, error code: ${response.errorCode()}, error message: ${response.description()}")
+        val response = bot.execute(smBuilder)
+        if (response.errorCode() != 0) {
+            logger.error("Cant send message to $who, error code: ${response.errorCode()}, error message: ${response.description()}")
+            if (response.errorCode() == 403) {
+                throw UserBlockedException()
             }
-        } catch (e: Exception) {
-            throw RuntimeException(e)
         }
     }
 

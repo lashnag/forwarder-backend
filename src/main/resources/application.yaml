@@ -27,7 +27,7 @@ spring:
 message-fetcher:
   url: http://sender:4322/get-subscription-messages
 rest-template:
-  connection-timeout: 5000
+  connection-timeout: 10000
 
 telegram-bot-starter:
   bot:
