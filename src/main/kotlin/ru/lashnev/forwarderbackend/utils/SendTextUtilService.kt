@@ -11,7 +11,17 @@ import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 class SendTextUtilService(private val bot: TelegramBot) {
     fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null, useMarkdown: Boolean = false) {
         logger.info("Send: what $what, who $who")
-        val smBuilder = SendMessage(who, what)
+
+        val maxMessageLength = MAX_MESSAGE_LENGTH
+        val messages = what?.chunked(maxMessageLength) ?: listOf(null)
+
+        for (message in messages) {
+            sendMessage(who, message, replyMarkup, useMarkdown)
+        }
+    }
+
+    private fun sendMessage(who: Long, message: String?, replyMarkup: Keyboard?, useMarkdown: Boolean) {
+        val smBuilder = SendMessage(who, message)
         if (replyMarkup != null) {
             smBuilder.replyMarkup(replyMarkup)
         }
@@ -30,5 +40,6 @@ class SendTextUtilService(private val bot: TelegramBot) {
 
     companion object {
         private val logger = logger()
+        private const val MAX_MESSAGE_LENGTH = 4000
     }
 }
