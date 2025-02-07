@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from pymystem3 import Mystem
 
-app = Flask(__name__)
+app = Flask("Lemmatizer")
 mystem = Mystem()
 
 @app.route('/lemmatize', methods=['POST'])
@@ -12,5 +12,4 @@ def lemmatize():
     lemmatized_sentence = ''.join(lemmas).strip()
     return jsonify({'lemmatized': lemmatized_sentence})
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=4892)
+app.run(host='0.0.0.0', port=4892)
