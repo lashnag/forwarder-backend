@@ -40,7 +40,7 @@ class MessageForwarderService(
                     val usersGotThisMessage = mutableSetOf<Long>()
                     subscriptions.forEach { subscription ->
                         checkNotNull(subscription.subscriber.chatId)
-                        logger.info("Check subscriber ${subscription.subscriber.username} ${subscription.subscriber.chatId} with search ${subscription.search.properties}")
+                        logger.info("Check subscriber ${subscription.subscriber.username} ${subscription.subscriber.chatId} on group ${subscription.group.name} with search ${subscription.search.properties}")
                         if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                             logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                         } else {
