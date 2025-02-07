@@ -1,17 +1,17 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from pymystem3 import Mystem
 
-app = Flask("Lemmatizer")
+app = FastAPI()
 mystem = Mystem()
 
-print("Server started")
+class SentenceRequest(BaseModel):
+    sentence: str
 
-@app.route('/lemmatize', methods=['POST'])
-def lemmatize():
-    data = request.get_json()
-    input_sentence = data.get('sentence', '')
+@app.post("/lemmatize")
+def lemmatize(request: SentenceRequest):
+    input_sentence = request.sentence
     lemmas = mystem.lemmatize(input_sentence)
     lemmatized_sentence = ''.join(lemmas).strip()
-    return jsonify({'lemmatized': lemmatized_sentence})
-
-app.run(host='0.0.0.0', port=4892)
+    return JSONResponse(content={'lemmatized': lemmatized_sentence})

@@ -11,7 +11,7 @@ class PythonClientLemmatizerService(private val restTemplate: RestTemplate) : Le
     init {
         val pipInstallCommand = arrayOf("pip", "install", "-r", "requirements.txt")
         runCommandAndWaitResult(pipInstallCommand)
-        val pythonCommand = arrayOf("python", "src/main/python/lemmatizer_server.py")
+        val pythonCommand = arrayOf("uvicorn", "src.main.python.lemmatizer_server:app", "--host", "0.0.0.0", "--port", "4892", "--workers", "4")
         Runtime.getRuntime().exec(pythonCommand)
     }
 
