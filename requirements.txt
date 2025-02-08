@@ -1,3 +1,0 @@
-fastapi
-uvicorn
-pymystem3
