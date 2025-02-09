@@ -66,7 +66,7 @@ class BaseIT {
             .withUsername("test")
             .withPassword("test")
 
-        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("telegram-forwarder-sender")).withExposedPorts(4322)
+        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("lemmatizer")).withExposedPorts(4355)
 
         init {
             postgreSQLContainer.start()
@@ -81,8 +81,8 @@ class BaseIT {
             registry.add("spring.datasource.password") { postgreSQLContainer.password }
 
             val forwarderPort = forwarderSenderContainer.firstMappedPort
-            registry.add("telegram-forwarder-sender.get-message-url") { "http://127.0.0.1:$forwarderPort/get-subscription-messages" }
-            registry.add("telegram-forwarder-sender.lemmatization-url") { "http://127.0.0.1:$forwarderPort/lemmatize" }
+            registry.add("api.get-message-url") { "http://127.0.0.1:$forwarderPort/get-subscription-messages" }
+            registry.add("api.lemmatization-url") { "http://127.0.0.1:$forwarderPort/lemmatize" }
         }
     }
 }

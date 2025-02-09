@@ -2,8 +2,8 @@ package ru.lashnev.forwarderbackend.configurations
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-@ConfigurationProperties("telegram-forwarder-sender")
-data class TelegramForwarderSenderProperties(
+@ConfigurationProperties("api")
+data class ApiProperties(
     val getMessageUrl: String,
     val lemmatizationUrl: String,
 )

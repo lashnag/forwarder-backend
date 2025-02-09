@@ -23,9 +23,9 @@ spring:
       name: ${BACKEND_BASIC_AUTH_USER}
       password: ${BACKEND_BASIC_AUTH_PASSWORD}
 
-telegram-forwarder-sender:
+api:
   get-message-url: http://sender:4322/get-subscription-messages
-  lemmatization-url: http://sender:4322/lemmatize
+  lemmatization-url: http://lemmatizer:4355/lemmatize
 rest-template:
   connection-timeout: 10000
 

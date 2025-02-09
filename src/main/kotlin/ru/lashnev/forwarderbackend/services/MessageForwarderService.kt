@@ -5,7 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
-import ru.lashnev.forwarderbackend.configurations.TelegramForwarderSenderProperties
+import ru.lashnev.forwarderbackend.configurations.ApiProperties
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.dto.Message
@@ -22,7 +22,7 @@ class MessageForwarderService(
     private val groupsDao: GroupsDao,
     private val subscriptionDao: SubscriptionDao,
     private val messageCheckerService: MessageCheckerService,
-    private val telegramForwarderSenderProperties: TelegramForwarderSenderProperties,
+    private val apiProperties: ApiProperties,
     private val sendTextUtilService: SendTextUtilService,
 ) {
 
@@ -42,7 +42,7 @@ class MessageForwarderService(
             try {
                 logger.info("Processing group ${group.name}")
                 val response = restTemplate.getForEntity(
-                    "${telegramForwarderSenderProperties.getMessageUrl}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
+                    "${apiProperties.getMessageUrl}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
                     MessageFetcherResponse::class.java
                 ).body
 
@@ -93,7 +93,7 @@ class MessageForwarderService(
         val messageWithAdditionalData = message.second.text +
                 "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
                 "\nПоиск по: ${subscription.search.properties}"
-        if (message.second.photo == null) {
+        if (message.second.imageTextRu == null) {
             sendTextUtilService.sendText(
                 who = subscription.subscriber.chatId,
                 what = messageWithAdditionalData,
@@ -102,7 +102,7 @@ class MessageForwarderService(
             sendTextUtilService.sendTextWithImage(
                 who = subscription.subscriber.chatId,
                 what = messageWithAdditionalData,
-                photo = message.second.photo!!,
+                photo = message.second.imageTextRu!!,
             )
         }
     }
