@@ -28,7 +28,7 @@ class MessageForwarderService(
     @Value("\${scheduler.antispam-delay}")
     private lateinit var antispamDelay: String
 
-    @Scheduled(fixedDelay = 5_000, initialDelay = 30_000)
+    @Scheduled(fixedDelay = 5_000, initialDelay = 100_000)
     fun processMessages() {
         logger.info("Start forwarder scheduler")
         val groups = try {
