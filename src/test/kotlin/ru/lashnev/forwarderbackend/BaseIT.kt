@@ -66,7 +66,7 @@ class BaseIT {
             .withUsername("test")
             .withPassword("test")
 
-        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("lemmatizer")).withExposedPorts(4355)
+        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("lashnag/lemmatizer")).withExposedPorts(4355)
 
         init {
             postgreSQLContainer.start()
