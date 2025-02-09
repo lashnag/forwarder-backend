@@ -47,8 +47,12 @@ class GetForDeleteSubscriptionsService(
                         .callbackData("${deleteGroup.callbackData}${group.name}")
                 )
                 subscriptionsByGroup.forEach { subscription ->
+                    val deleteButtonName = "$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.search.properties}"
+                    if (subscription.group.invalid) {
+                        deleteButtonName.plus(" (группа неактивна)")
+                    }
                     buttons.addRow(
-                        InlineKeyboardButton("$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.search.properties}")
+                        InlineKeyboardButton(deleteButtonName)
                             .callbackData("${deleteGroup.callbackData}${subscription.group.name}${deleteSubscription.callbackData}${subscription.search.searchId}")
                     )
                 }

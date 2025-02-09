@@ -1,7 +1,6 @@
 package ru.lashnev.forwarderbackend.services
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import ru.lashnev.forwarderbackend.BaseIT
@@ -120,7 +119,6 @@ class MessageCheckerServiceTest : BaseIT() {
         assertThat(result).isTrue()
     }
 
-    @Disabled
     @Test
     fun testSentenceWithOtherDeclensionFitKeyword() {
         val message = "Подешевело! Прямые рейсы из Египта в Тюмень, Челябинск и Н.Новгород от 5600₽ в одну сторону"

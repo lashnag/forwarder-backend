@@ -12,9 +12,9 @@ spring:
       name: admin
       password: admin
 
-message-fetcher:
-  url: http://127.0.0.1:4322/get-subscription-messages
-
+telegram-forwarder-sender:
+  get-message-url: http://127.0.0.1:4322/get-subscription-messages
+  lemmatization-url: http://127.0.0.1:4322/lemmatize
 telegram-bot-starter:
   bot:
     token: your_bot_token

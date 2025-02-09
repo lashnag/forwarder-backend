@@ -16,10 +16,13 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
+
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -63,8 +66,11 @@ class BaseIT {
             .withUsername("test")
             .withPassword("test")
 
+        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("telegram-forwarder-sender")).withExposedPorts(4322)
+
         init {
-            postgreSQLContainer.start() // Запускаем контейнер
+            postgreSQLContainer.start()
+            forwarderSenderContainer.start()
         }
 
         @JvmStatic
@@ -73,6 +79,10 @@ class BaseIT {
             registry.add("spring.datasource.url") { postgreSQLContainer.jdbcUrl }
             registry.add("spring.datasource.username") { postgreSQLContainer.username }
             registry.add("spring.datasource.password") { postgreSQLContainer.password }
+
+            val forwarderPort = forwarderSenderContainer.firstMappedPort
+            registry.add("telegram-forwarder-sender.get-message-url") { "http://127.0.0.1:$forwarderPort/get-subscription-messages" }
+            registry.add("telegram-forwarder-sender.lemmatization-url") { "http://127.0.0.1:$forwarderPort/lemmatize" }
         }
     }
 }

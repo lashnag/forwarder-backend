@@ -16,9 +16,9 @@ class MessageCheckerService(private val lemmatizerService: LemmatizerService) {
     }
 
     private fun containAllWords(message: String, keywords: List<String>): Boolean {
-        val messageLemmas = lemmatizerService.normalize(message).split(Regex("[\\s,!?.]+"))
+        val messageLemmas = message.split(Regex("[\\s,!?.]+"))
             .filterNot { it.isEmpty() }
-            .map { it.lowercase() }
+            .map { lemmatizerService.normalize(it).lowercase() }
         val keywordsLemmas = keywords.map { lemmatizerService.normalize(it).lowercase() }
         return messageLemmas.containsAll(keywordsLemmas)
     }

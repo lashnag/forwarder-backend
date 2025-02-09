@@ -6,8 +6,8 @@ import org.tartarus.snowball.ext.RussianStemmer
 
 @Service
 class SnowballLemmatizerService : LemmatizerService {
-    override fun normalize(sentence: String): String {
-        return sentence.split(Regex("[\\s,!?.]+")).joinToString(" ") { it.stem() }
+    override fun normalize(word: String): String {
+        return word.stem()
     }
 
     private fun String.stem(): String {

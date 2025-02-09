@@ -5,7 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
-import ru.lashnev.forwarderbackend.configurations.MessageFetcherProperties
+import ru.lashnev.forwarderbackend.configurations.TelegramForwarderSenderProperties
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
@@ -21,7 +21,7 @@ class MessageForwarderService(
     private val groupsDao: GroupsDao,
     private val subscriptionDao: SubscriptionDao,
     private val messageCheckerService: MessageCheckerService,
-    private val messageFetcherProperties: MessageFetcherProperties,
+    private val telegramForwarderSenderProperties: TelegramForwarderSenderProperties,
     private val sendTextUtilService: SendTextUtilService,
 ) {
 
@@ -41,7 +41,7 @@ class MessageForwarderService(
             try {
                 logger.info("Processing group ${group.name}")
                 val response = restTemplate.getForEntity(
-                    "${messageFetcherProperties.url}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
+                    "${telegramForwarderSenderProperties.getMessageUrl}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
                     MessageFetcherResponse::class.java
                 ).body
 
