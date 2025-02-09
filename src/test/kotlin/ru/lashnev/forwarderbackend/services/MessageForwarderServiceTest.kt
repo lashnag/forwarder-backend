@@ -22,6 +22,7 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.BaseIT
+import ru.lashnev.forwarderbackend.dto.Message
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.models.Properties
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
@@ -79,8 +80,8 @@ class MessageForwarderServiceTest : BaseIT() {
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
-                        9L to "Пересылаемое сообщение 1",
-                        10L to "Пересылаемое сообщение 2"
+                        9L to Message("Пересылаемое сообщение 1"),
+                        10L to Message("Пересылаемое сообщение 2")
                     ),
                 )
             )
@@ -102,8 +103,8 @@ class MessageForwarderServiceTest : BaseIT() {
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
-                        9L to "Пересылаемое сообщение 1",
-                        10L to "Пересылаемое сообщение 2"
+                        9L to Message("Пересылаемое сообщение 1"),
+                        10L to Message("Пересылаемое сообщение 2")
                     ),
                 )
             )
@@ -113,7 +114,7 @@ class MessageForwarderServiceTest : BaseIT() {
         messageForwarderService.processMessages()
 
         verify(messageCheckerService, times(4)).doesMessageFit(any<String>(), any<Properties>())
-        verify(sendTextUtilService, times(4)).sendText(any<Long>(), any<String>(), anyOrNull(), any<Boolean>())
+        verify(sendTextUtilService, times(4)).sendText(any<Long>(), any<String>(), anyOrNull())
         groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }
@@ -126,7 +127,7 @@ class MessageForwarderServiceTest : BaseIT() {
         whenever(messageResponse.errorCode()).thenReturn(403)
         whenever(telegramBot.execute(any<SendMessage>())).thenReturn(messageResponse)
         whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
-            ResponseEntity.ok(MessageFetcherResponse(linkedMapOf(9L to "Пересылаемое сообщение 1")))
+            ResponseEntity.ok(MessageFetcherResponse(linkedMapOf(9L to Message("Пересылаемое сообщение 1"))))
         )
         whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 

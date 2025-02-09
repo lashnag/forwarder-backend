@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.configurations.TelegramForwarderSenderProperties
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
+import ru.lashnev.forwarderbackend.dto.Message
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 import ru.lashnev.forwarderbackend.models.Group
@@ -71,10 +72,10 @@ class MessageForwarderService(
                 if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    if (messageCheckerService.doesMessageFit(message.value, subscription.search.properties)) {
+                    if (messageCheckerService.doesMessageFit(message.value.text, subscription.search.properties)) {
                         usersGotThisMessage.add(subscription.subscriber.chatId)
                         try {
-                            sendMessage(group, message, subscription)
+                            sendMessage(group, message.key to message.value, subscription)
                         } catch (e: UserBlockedException) {
                             subscriptionDao.deleteSubscriber(subscription.subscriber.username)
                         } catch (e: Exception) {
@@ -86,16 +87,24 @@ class MessageForwarderService(
         }
     }
 
-    private fun sendMessage(group: Group, message: Map.Entry<Long, String>, subscription: Subscription) {
+    private fun sendMessage(group: Group, message: Pair<Long, Message>, subscription: Subscription) {
         checkNotNull(subscription.subscriber.chatId)
-        val messageLink = "https://t.me/${group.name}/${message.key}"
-        val messageWithAdditionalData = message.value +
+        val messageLink = "https://t.me/${group.name}/${message.first}"
+        val messageWithAdditionalData = message.second.text +
                 "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
                 "\nПоиск по: ${subscription.search.properties}"
-        sendTextUtilService.sendText(
-            who = subscription.subscriber.chatId,
-            what = messageWithAdditionalData,
-        )
+        if (message.second.photo == null) {
+            sendTextUtilService.sendText(
+                who = subscription.subscriber.chatId,
+                what = messageWithAdditionalData,
+            )
+        } else {
+            sendTextUtilService.sendTextWithImage(
+                who = subscription.subscriber.chatId,
+                what = messageWithAdditionalData,
+                photo = message.second.photo!!,
+            )
+        }
     }
 
     companion object {

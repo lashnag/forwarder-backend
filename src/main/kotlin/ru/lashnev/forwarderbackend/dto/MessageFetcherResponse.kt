@@ -1,5 +1,10 @@
 package ru.lashnev.forwarderbackend.dto
 
 data class MessageFetcherResponse(
-    val messages: LinkedHashMap<Long, String>
+    val messages: LinkedHashMap<Long, Message>
+)
+
+data class Message(
+    val text: String,
+    val photo: String? = null
 )
