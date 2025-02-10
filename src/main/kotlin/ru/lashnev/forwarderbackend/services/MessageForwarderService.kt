@@ -93,7 +93,7 @@ class MessageForwarderService(
         val messageWithAdditionalData = message.second.text +
                 "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
                 "\nПоиск по: ${subscription.search.properties}"
-        if (message.second.imageTextRu == null) {
+        if (message.second.image == null) {
             sendTextUtilService.sendText(
                 who = subscription.subscriber.chatId,
                 what = messageWithAdditionalData,
@@ -102,7 +102,7 @@ class MessageForwarderService(
             sendTextUtilService.sendTextWithImage(
                 who = subscription.subscriber.chatId,
                 what = messageWithAdditionalData,
-                photo = message.second.imageTextRu!!,
+                photo = message.second.image!!,
             )
         }
     }
