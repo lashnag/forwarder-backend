@@ -8,12 +8,12 @@ import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.configurations.ApiProperties
 import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
-import ru.lashnev.forwarderbackend.dto.Message
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.models.Subscription
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
+import ru.lashnev.forwarderbackend.utils.TextUtils
 import ru.lashnev.forwarderbackend.utils.logger
 
 @Service
@@ -25,6 +25,7 @@ class MessageForwarderService(
     private val apiProperties: ApiProperties,
     private val sendTextUtilService: SendTextUtilService,
     private val ocrService: OcrService,
+    private val textUtils: TextUtils,
 ) {
 
     @Value("\${scheduler.antispam-delay}")
@@ -69,6 +70,7 @@ class MessageForwarderService(
             val imageText = message.value.image?.let {
                 ocrService.convertToText(it)
             }
+            val clearMessageWithImageText = textUtils.removeMarkdown(message.value.text).plus(" $imageText")
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
                 checkNotNull(subscription.subscriber.chatId)
@@ -76,10 +78,10 @@ class MessageForwarderService(
                 if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    if (messageCheckerService.doesMessageFit(message.value.text.plus(" $imageText"), subscription.search.properties)) {
+                    if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
                         usersGotThisMessage.add(subscription.subscriber.chatId)
                         try {
-                            sendMessage(group, message.key to message.value, subscription)
+                            sendMessage(group, message.key to clearMessageWithImageText, subscription)
                         } catch (e: UserBlockedException) {
                             subscriptionDao.deleteSubscriber(subscription.subscriber.username)
                         } catch (e: Exception) {
@@ -91,24 +93,16 @@ class MessageForwarderService(
         }
     }
 
-    private fun sendMessage(group: Group, message: Pair<Long, Message>, subscription: Subscription) {
+    private fun sendMessage(group: Group, message: Pair<Long, String>, subscription: Subscription) {
         checkNotNull(subscription.subscriber.chatId)
         val messageLink = "https://t.me/${group.name}/${message.first}"
-        val messageWithAdditionalData = message.second.text +
+        val messageWithAdditionalData = message.second +
                 "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
                 "\nПоиск по: ${subscription.search.properties}"
-        if (message.second.image == null) {
-            sendTextUtilService.sendText(
-                who = subscription.subscriber.chatId,
-                what = messageWithAdditionalData,
-            )
-        } else {
-            sendTextUtilService.sendTextWithImage(
-                who = subscription.subscriber.chatId,
-                what = messageWithAdditionalData,
-                photo = message.second.image!!,
-            )
-        }
+        sendTextUtilService.sendText(
+            who = subscription.subscriber.chatId,
+            what = messageWithAdditionalData,
+        )
     }
 
     companion object {

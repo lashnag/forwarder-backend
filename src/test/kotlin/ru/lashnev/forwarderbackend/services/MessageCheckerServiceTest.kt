@@ -110,16 +110,6 @@ class MessageCheckerServiceTest : BaseIT() {
     }
 
     @Test
-    fun testMessageWithMarkdownFitKeyword() {
-        val message = "из Барнаула на **Пхукет** за 32 000 р. RT (февраль)\\nAzur Air, прямые рейсы с багажом - https://smkt.us/ekrax"
-        val keyword = "пхукет"
-
-        val result = messageCheckerService.doesMessageFit(message, Properties(keywords = mutableListOf(keyword)))
-
-        assertThat(result).isTrue()
-    }
-
-    @Test
     fun testSentenceWithOtherDeclensionFitKeyword() {
         val message = "Подешевело! Прямые рейсы из Египта в Тюмень, Челябинск и Н.Новгород от 5600₽ в одну сторону"
         val keyword = "египет"

@@ -1,18 +1,13 @@
 package ru.lashnev.forwarderbackend.services
 
-import com.vladsch.flexmark.html.HtmlRenderer
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.Node
-import com.vladsch.flexmark.util.data.MutableDataSet
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.models.Properties
 
 @Service
 class MessageCheckerService(private val lemmatizerService: LemmatizerService) {
     fun doesMessageFit(message: String, searchProperties: Properties): Boolean {
-        val cleanMessage = removeMarkdown(message)
-        return (searchProperties.keywords.isEmpty() || containAllWords(cleanMessage, searchProperties.keywords))
-            && (searchProperties.maxMoney == null || hasAmountLessThan(cleanMessage, searchProperties.maxMoney!!))
+        return (searchProperties.keywords.isEmpty() || containAllWords(message, searchProperties.keywords))
+            && (searchProperties.maxMoney == null || hasAmountLessThan(message, searchProperties.maxMoney!!))
     }
 
     private fun containAllWords(message: String, keywords: List<String>): Boolean {
@@ -39,15 +34,5 @@ class MessageCheckerService(private val lemmatizerService: LemmatizerService) {
         }
 
         return false
-    }
-
-    private fun removeMarkdown(text: String): String {
-        val options = MutableDataSet()
-        val parser = Parser.builder(options).build()
-        val renderer = HtmlRenderer.builder(options).build()
-
-        val document: Node = parser.parse(text)
-
-        return renderer.render(document).replace(Regex("<.*?>"), "")
     }
 }
