@@ -70,7 +70,8 @@ class MessageForwarderService(
             val imageText = message.value.image?.let {
                 ocrService.convertToText(it)
             }
-            val clearMessageWithImageText = textUtils.removeMarkdown(message.value.text).plus(" $imageText")
+            val clearMessage = textUtils.removeMarkdown(message.value.text)
+            val clearMessageWithImageText = clearMessage.plus(" ").plus(imageText)
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
                 checkNotNull(subscription.subscriber.chatId)
@@ -81,7 +82,7 @@ class MessageForwarderService(
                     if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
                         usersGotThisMessage.add(subscription.subscriber.chatId)
                         try {
-                            sendMessage(group, message.key to clearMessageWithImageText, subscription)
+                            sendMessage(group, message.key to clearMessage, subscription)
                         } catch (e: UserBlockedException) {
                             subscriptionDao.deleteSubscriber(subscription.subscriber.username)
                         } catch (e: Exception) {
