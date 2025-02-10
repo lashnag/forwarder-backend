@@ -24,6 +24,7 @@ class MessageForwarderService(
     private val messageCheckerService: MessageCheckerService,
     private val apiProperties: ApiProperties,
     private val sendTextUtilService: SendTextUtilService,
+    private val ocrService: OcrService,
 ) {
 
     @Value("\${scheduler.antispam-delay}")
@@ -65,6 +66,9 @@ class MessageForwarderService(
     private fun sendMessagesByGroup(group: Group, response: MessageFetcherResponse) {
         val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }.filterNot { it.subscriber.chatId == null }
         response.messages.forEach { message ->
+            val imageText = message.value.image?.let {
+                ocrService.convertToText(it)
+            }
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
                 checkNotNull(subscription.subscriber.chatId)
@@ -72,7 +76,7 @@ class MessageForwarderService(
                 if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    if (messageCheckerService.doesMessageFit(message.value.text, subscription.search.properties)) {
+                    if (messageCheckerService.doesMessageFit(message.value.text.plus(" $imageText"), subscription.search.properties)) {
                         usersGotThisMessage.add(subscription.subscriber.chatId)
                         try {
                             sendMessage(group, message.key to message.value, subscription)

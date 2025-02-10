@@ -66,11 +66,13 @@ class BaseIT {
             .withUsername("test")
             .withPassword("test")
 
-        private val forwarderSenderContainer = GenericContainer(DockerImageName.parse("lashnag/lemmatizer")).withExposedPorts(4355)
+        private val lemmatizerContainer = GenericContainer(DockerImageName.parse("lashnag/lemmatizer")).withExposedPorts(4355)
+        private val ocrContainer = GenericContainer(DockerImageName.parse("lashnag/ocr")).withExposedPorts(4366)
 
         init {
             postgreSQLContainer.start()
-            forwarderSenderContainer.start()
+            lemmatizerContainer.start()
+            ocrContainer.start()
         }
 
         @JvmStatic
@@ -80,9 +82,11 @@ class BaseIT {
             registry.add("spring.datasource.username") { postgreSQLContainer.username }
             registry.add("spring.datasource.password") { postgreSQLContainer.password }
 
-            val forwarderPort = forwarderSenderContainer.firstMappedPort
-            registry.add("api.get-message-url") { "http://127.0.0.1:$forwarderPort/get-subscription-messages" }
-            registry.add("api.lemmatization-url") { "http://127.0.0.1:$forwarderPort/lemmatize" }
+            val lemmatizerPort = lemmatizerContainer.firstMappedPort
+            registry.add("api.lemmatization-url") { "http://127.0.0.1:$lemmatizerPort/lemmatize" }
+
+            val ocrPort = ocrContainer.firstMappedPort
+            registry.add("api.ocr-url") { "http://127.0.0.1:$ocrPort/image-to-text" }
         }
     }
 }

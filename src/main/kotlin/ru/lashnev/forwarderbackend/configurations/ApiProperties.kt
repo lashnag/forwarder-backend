@@ -6,4 +6,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class ApiProperties(
     val getMessageUrl: String,
     val lemmatizationUrl: String,
+    val ocrUrl: String,
 )

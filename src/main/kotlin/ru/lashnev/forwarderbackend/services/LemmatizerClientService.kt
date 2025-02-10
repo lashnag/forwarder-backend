@@ -7,12 +7,12 @@ import ru.lashnev.forwarderbackend.configurations.ApiProperties
 
 @Service
 @Primary
-class PythonClientLemmatizerService(
+class LemmatizerClientService(
     private val restTemplate: RestTemplate,
-    private val senderProperties: ApiProperties,
+    private val apiProperties: ApiProperties,
 ) : LemmatizerService {
     override fun normalize(word: String): String {
-        return restTemplate.postForEntity(senderProperties.lemmatizationUrl, Request(word), Response::class.java).body!!.lemmatized
+        return restTemplate.postForEntity(apiProperties.lemmatizationUrl, Request(word), Response::class.java).body!!.lemmatized
     }
 
     data class Request(val word: String)

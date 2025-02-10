@@ -26,6 +26,7 @@ spring:
 api:
   get-message-url: http://sender:4322/get-subscription-messages
   lemmatization-url: http://lemmatizer:4355/lemmatize
+  ocr-url: http://ocr:4355/image-to-text
 rest-template:
   connection-timeout: 10000
 
