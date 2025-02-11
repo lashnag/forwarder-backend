@@ -98,7 +98,7 @@ class MessageForwarderService(
         checkNotNull(subscription.subscriber.chatId)
         val messageLink = "https://t.me/${group.name}/${message.first}"
         val messageWithAdditionalData = message.second +
-                "\n\n[Перейти к сообщению в группе ${group.name}]($messageLink)" +
+                "\n\nПерейти к сообщению в группе ${group.name} -> $messageLink" +
                 "\nПоиск по: ${subscription.search.properties}"
         sendTextUtilService.sendText(
             who = subscription.subscriber.chatId,

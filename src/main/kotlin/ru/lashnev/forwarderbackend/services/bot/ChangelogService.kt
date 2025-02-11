@@ -25,7 +25,7 @@ class ChangelogService(private val sendTextUtilService: SendTextUtilService, res
         val msg = update.message()
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CHANGELOG) {
-            sendTextUtilService.sendText(telegramUser.id(), changelog.getContentAsString(Charset.defaultCharset()))
+            sendTextUtilService.sendText(telegramUser.id(), changelog.getContentAsString(Charset.defaultCharset()), markdown = true)
             return
         }
     }

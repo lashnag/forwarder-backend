@@ -114,7 +114,7 @@ class MessageForwarderServiceTest : BaseIT() {
         messageForwarderService.processMessages()
 
         verify(messageCheckerService, times(4)).doesMessageFit(any<String>(), any<Properties>())
-        verify(sendTextUtilService, times(4)).sendText(any<Long>(), any<String>(), anyOrNull())
+        verify(sendTextUtilService, times(4)).sendText(any<Long>(), any<String>(), anyOrNull(), anyOrNull())
         groupsDao.getValidGroups().forEach {
             assertThat(it.lastMessageId).isEqualTo(10)
         }

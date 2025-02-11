@@ -2,24 +2,28 @@ package ru.lashnev.forwarderbackend.utils
 
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.Keyboard
+import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 
 @Service
 class SendTextUtilService(private val bot: TelegramBot) {
-    fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null) {
+    fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null, markdown: Boolean = false) {
         logger.info("Send text: what $what, who $who")
         val messages = what?.chunked(MAX_MESSAGE_LENGTH) ?: listOf(null)
         for (message in messages) {
-            sendMessageChunk(who, message, replyMarkup)
+            sendMessageChunk(who, message, replyMarkup, markdown)
         }
     }
 
-    private fun sendMessageChunk(who: Long, message: String?, replyMarkup: Keyboard?) {
+    private fun sendMessageChunk(who: Long, message: String?, replyMarkup: Keyboard?, markdown: Boolean) {
         val messageBuilder = SendMessage(who, message)
         if (replyMarkup != null) {
             messageBuilder.replyMarkup(replyMarkup)
+        }
+        if (markdown) {
+            messageBuilder.parseMode(ParseMode.Markdown)
         }
 
         val response = bot.execute(messageBuilder)
