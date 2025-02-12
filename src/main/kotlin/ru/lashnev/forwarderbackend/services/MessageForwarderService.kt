@@ -72,6 +72,7 @@ class MessageForwarderService(
             }
             val clearMessage = message.value.text?.let { textUtils.removeMarkdown(it) }
             val clearMessageWithImageText = clearMessage.plus(" ").plus(imageText)
+            logger.info("Check message $clearMessageWithImageText")
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
                 checkNotNull(subscription.subscriber.chatId)

@@ -33,9 +33,13 @@ rest-template:
 telegram-bot-starter:
   bot:
     token: ${FORWARDER_BACKEND_BOT_SECRET_KEY}
+
 scheduler:
   pool-size: 3
   antispam-delay: 500
+
+cache:
+  max-size: 100000
 
 management:
   endpoints:

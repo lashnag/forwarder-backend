@@ -1,5 +1,6 @@
 package ru.lashnev.forwarderbackend.services
 
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -11,6 +12,7 @@ class LemmatizerClientService(
     private val restTemplate: RestTemplate,
     private val apiProperties: ApiProperties,
 ) : LemmatizerService {
+    @Cacheable("lemmatizationCache")
     override fun normalize(word: String): String {
         return restTemplate.postForEntity(apiProperties.lemmatizationUrl, Request(word), Response::class.java).body!!.lemmatized
     }
