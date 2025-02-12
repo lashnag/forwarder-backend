@@ -5,6 +5,6 @@ data class MessageFetcherResponse(
 )
 
 data class Message(
-    val text: String,
+    val text: String? = null,
     val image: String? = null,
 )
