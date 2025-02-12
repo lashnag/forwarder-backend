@@ -28,7 +28,7 @@ api:
   lemmatization-url: http://lemmatizer:4355/lemmatize
   ocr-url: http://ocr:4366/image-to-text
 rest-template:
-  connection-timeout: 10000
+  connection-timeout: 20000
 
 telegram-bot-starter:
   bot:
