@@ -71,7 +71,7 @@ class MessageForwarderService(
                 ocrService.convertToText(it)
             }
             val clearMessage = message.value.text?.let { textUtils.removeMarkdown(it) }
-            val clearMessageWithImageText = clearMessage.plus(" ").plus(imageText)
+            val clearMessageWithImageText = ((clearMessage ?: "").plus(" ").plus(imageText ?: "")).trim()
             logger.info("Check message $clearMessageWithImageText")
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
