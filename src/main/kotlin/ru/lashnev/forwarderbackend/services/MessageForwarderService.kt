@@ -79,15 +79,15 @@ class MessageForwarderService(
                 if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
-                        usersGotThisMessage.add(subscription.subscriber.chatId)
-                        try {
+                    try {
+                        if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
+                            usersGotThisMessage.add(subscription.subscriber.chatId)
                             sendMessage(group, message.key to (clearMessage ?: "Найдено в изображении"), subscription)
-                        } catch (e: UserBlockedException) {
-                            subscriptionDao.deleteSubscriber(subscription.subscriber.username)
-                        } catch (e: Exception) {
-                            logger.error(e.message, e)
                         }
+                    } catch (e: UserBlockedException) {
+                        subscriptionDao.deleteSubscriber(subscription.subscriber.username)
+                    } catch (e: Exception) {
+                        logger.error(e.message, e)
                     }
                 }
             }
