@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.DefaultUriBuilderFactory
 
 @Configuration
 class RestTemplateConfiguration {
@@ -14,10 +15,13 @@ class RestTemplateConfiguration {
 
     @Bean
     fun getRestTemplate(): RestTemplate {
+        val defaultUriBuilderFactory = DefaultUriBuilderFactory()
+        defaultUriBuilderFactory.encodingMode = DefaultUriBuilderFactory.EncodingMode.VALUES_ONLY
+
         val factory = SimpleClientHttpRequestFactory()
         factory.setConnectTimeout(connectionTimeout.toInt())
         factory.setReadTimeout(connectionTimeout.toInt())
 
-        return RestTemplate(factory)
+        return RestTemplate(factory).apply { setUriTemplateHandler(defaultUriBuilderFactory) }
     }
 }

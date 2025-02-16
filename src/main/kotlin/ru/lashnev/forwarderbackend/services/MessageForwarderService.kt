@@ -43,20 +43,11 @@ class MessageForwarderService(
         groups.forEach { group ->
             try {
                 logger.info("Processing group ${group.name}")
-                val response = restTemplate.getForEntity(
-                    "${apiProperties.getMessageUrl}?subscription=${group.name}&last_message_id=${group.lastMessageId}",
-                    MessageFetcherResponse::class.java
-                ).body
-
-                checkNotNull(response) { "Response body is null" }
-
-                sendMessagesByGroup(group, response)
-                response.messages.keys.maxOrNull()?.let { lastMessageId ->
-                    groupsDao.setLastGroupMessage(group.name, lastMessageId)
-                }
+                val messagesResponse = getMessagesResponse(group)
+                sendMessagesByGroup(group, messagesResponse)
                 Thread.sleep(antispamDelay.toLong())
             } catch (e: HttpClientErrorException) {
-                logger.error("Invalid group ${group.name}", e)
+                logger.error("Blocked group ${group.name}", e)
                 groupsDao.setGroupInvalid(group.name)
             } catch (e: Exception) {
                 logger.error(e.message, e)
@@ -64,9 +55,18 @@ class MessageForwarderService(
         }
     }
 
-    private fun sendMessagesByGroup(group: Group, response: MessageFetcherResponse) {
+    private fun getMessagesResponse(group: Group) = checkNotNull(restTemplate.getForEntity(
+        "${apiProperties.getMessageUrl}?subscription={subscription}&last_message_id={lastMessageId}",
+        MessageFetcherResponse::class.java,
+        mapOf(
+            "subscription" to group.name,
+            "lastMessageId" to group.lastMessageId,
+        )
+    ).body)
+
+    private fun sendMessagesByGroup(group: Group, messagesResponse: MessageFetcherResponse) {
         val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }.filterNot { it.subscriber.chatId == null }
-        response.messages.forEach { message ->
+        messagesResponse.messages.forEach { message ->
             val imageText = message.value.image?.let {
                 ocrService.convertToText(it)
             }
@@ -75,34 +75,44 @@ class MessageForwarderService(
             logger.info("Check message $clearMessageWithImageText")
             val usersGotThisMessage = mutableSetOf<Long>()
             subscriptions.forEach { subscription ->
-                checkNotNull(subscription.subscriber.chatId)
-                logger.info("Check subscriber ${subscription.subscriber.username} ${subscription.subscriber.chatId} on group ${subscription.group.name} with search ${subscription.search.properties}")
-                if (usersGotThisMessage.contains(subscription.subscriber.chatId)) {
+                val chatId = checkNotNull(subscription.subscriber.chatId)
+                if (usersGotThisMessage.contains(chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    try {
-                        if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
-                            usersGotThisMessage.add(subscription.subscriber.chatId)
-                            sendMessage(group, message.key to (clearMessage ?: "Найдено в изображении"), subscription)
-                        }
-                    } catch (e: UserBlockedException) {
-                        subscriptionDao.deleteSubscriber(subscription.subscriber.username)
-                    } catch (e: Exception) {
-                        logger.error(e.message, e)
-                    }
+                    if (sendIfMessageFit(subscription, clearMessageWithImageText, message.key to (clearMessage ?: "Найден в изображении")))
+                        usersGotThisMessage.add(chatId)
                 }
             }
         }
+        messagesResponse.messages.keys.maxOrNull()?.let { lastMessageId ->
+            groupsDao.setLastGroupMessage(group.name, lastMessageId)
+        }
+    }
+
+    private fun sendIfMessageFit(subscription: Subscription, clearMessageWithImageText: String, messageToSend: Pair<Long, String>): Boolean {
+        val chatId = checkNotNull(subscription.subscriber.chatId)
+        logger.info("Check subscriber ${subscription.subscriber.username} $chatId on group ${subscription.group.name} with search ${subscription.search.properties}")
+        try {
+            if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
+                sendMessage(subscription.group, messageToSend, subscription)
+            }
+            return true
+        } catch (e: UserBlockedException) {
+            subscriptionDao.deleteSubscriber(subscription.subscriber.username)
+        } catch (e: Exception) {
+            logger.error(e.message, e)
+        }
+        return false
     }
 
     private fun sendMessage(group: Group, message: Pair<Long, String>, subscription: Subscription) {
-        checkNotNull(subscription.subscriber.chatId)
+        val chatId = checkNotNull(subscription.subscriber.chatId)
         val messageLink = "https://t.me/${group.name}/${message.first}"
         val messageWithAdditionalData = message.second +
                 "\n\nПерейти к сообщению в группе ${group.name} -> $messageLink" +
                 "\nПоиск по: ${subscription.search.properties}"
         sendTextUtilService.sendText(
-            who = subscription.subscriber.chatId,
+            who = chatId,
             what = messageWithAdditionalData,
         )
     }

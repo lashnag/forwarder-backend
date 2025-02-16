@@ -22,8 +22,8 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import ru.lashnev.forwarderbackend.BaseIT
-import ru.lashnev.forwarderbackend.dto.Message
 import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
+import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse.Message
 import ru.lashnev.forwarderbackend.models.Properties
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import kotlin.test.assertEquals
@@ -44,9 +44,13 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseError() {
-        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenThrow(
-            RestClientException("Server Error")
-        )
+        whenever(
+            restTemplate.getForEntity(
+                any<String>(),
+                eq(MessageFetcherResponse::class.java),
+                any<Map<String, String>>()
+            )
+        ).thenThrow(RestClientException("Server Error"))
 
         messageForwarderService.processMessages()
 
@@ -60,9 +64,13 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseGroupInvalid() {
-        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenThrow(
-            HttpClientErrorException(HttpStatus.FORBIDDEN)
-        )
+        whenever(
+            restTemplate.getForEntity(
+                any<String>(),
+                eq(MessageFetcherResponse::class.java),
+                any<Map<String, String>>()
+            )
+        ).thenThrow(HttpClientErrorException(HttpStatus.FORBIDDEN))
 
         messageForwarderService.processMessages()
 
@@ -76,7 +84,13 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions.sql")
     fun messageFetcherResponseOkButSubscribersV1() {
-        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
+        whenever(
+            restTemplate.getForEntity(
+                any<String>(),
+                eq(MessageFetcherResponse::class.java),
+                any<Map<String, String>>()
+            )
+        ).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
@@ -99,7 +113,13 @@ class MessageForwarderServiceTest : BaseIT() {
     @Test
     @Sql("/sql/subscriptions_v2.sql")
     fun messageFetcherResponseOk() {
-        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
+        whenever(
+            restTemplate.getForEntity(
+                any<String>(),
+                eq(MessageFetcherResponse::class.java),
+                any<Map<String, String>>()
+            )
+        ).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
@@ -126,7 +146,13 @@ class MessageForwarderServiceTest : BaseIT() {
         val messageResponse = mock<SendResponse>()
         whenever(messageResponse.errorCode()).thenReturn(403)
         whenever(telegramBot.execute(any<SendMessage>())).thenReturn(messageResponse)
-        whenever(restTemplate.getForEntity(any<String>(), eq(MessageFetcherResponse::class.java))).thenReturn(
+        whenever(
+            restTemplate.getForEntity(
+                any<String>(),
+                eq(MessageFetcherResponse::class.java),
+                any<Map<String, String>>()
+            )
+        ).thenReturn(
             ResponseEntity.ok(MessageFetcherResponse(linkedMapOf(9L to Message("Пересылаемое сообщение 1"))))
         )
         whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)

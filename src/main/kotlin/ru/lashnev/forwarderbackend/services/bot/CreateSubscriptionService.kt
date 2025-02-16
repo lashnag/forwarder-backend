@@ -1,21 +1,33 @@
 package ru.lashnev.forwarderbackend.services.bot
 
+import com.github.lashnag.telegrambotstarter.UpdatesService
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
+import ru.lashnev.forwarderbackend.configurations.ApiProperties
+import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
-import ru.lashnev.forwarderbackend.utils.logger
-import com.github.lashnag.telegrambotstarter.UpdatesService
-import ru.lashnev.forwarderbackend.models.*
+import ru.lashnev.forwarderbackend.models.AdminCommand
+import ru.lashnev.forwarderbackend.models.Group
+import ru.lashnev.forwarderbackend.models.Properties
+import ru.lashnev.forwarderbackend.models.Search
+import ru.lashnev.forwarderbackend.models.Subscriber
+import ru.lashnev.forwarderbackend.models.Subscription
+import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
+import ru.lashnev.forwarderbackend.utils.logger
 
 @Service
 class CreateSubscriptionService(
     private val subscriptionDao: SubscriptionDao,
+    private val groupsDao: GroupsDao,
     private val sendTextUtilService: SendTextUtilService,
+    private val restTemplate: RestTemplate,
+    private val apiProperties: ApiProperties,
 ) : UpdatesService {
 
     val userContext: MutableMap<Long, State> = mutableMapOf()
@@ -120,8 +132,12 @@ class CreateSubscriptionService(
             }
 
             if (intersectedSubscriptions.isEmpty()) {
-                subscriptionDao.addSubscription(subscription)
-                sendTextUtilService.sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
+                if (isGroupValid(state.group!!.name)) {
+                    subscriptionDao.addSubscription(subscription)
+                    sendTextUtilService.sendText(callbackQuery.from().id(), SUBSCRIPTION_SUCCESS)
+                } else {
+                    sendTextUtilService.sendText(callbackQuery.from().id(), GROUP_INVALID)
+                }
             } else {
                 sendTextUtilService.sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().group}")
             }
@@ -129,6 +145,24 @@ class CreateSubscriptionService(
         }
     }
 
+    private fun isGroupValid(groupName: String): Boolean {
+        val group = groupsDao.getByName(groupName)
+        return if (group == null) {
+            try {
+                restTemplate.getForEntity(
+                    "${apiProperties.joinGroupUrl}?subscription={subscription}",
+                    Void::class.java,
+                    mapOf("subscription" to groupName)
+                )
+                true
+            } catch (e: Exception) {
+                logger.warn("Cant join to the group $groupName")
+                false
+            }
+        } else {
+            !group.invalid
+        }
+    }
 
     private fun cancelButtonClicked(callbackQuery: CallbackQuery) {
         handleError(callbackQuery.from().id()) {
@@ -146,10 +180,10 @@ class CreateSubscriptionService(
                 ) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
                 userState.group = Group(
                     msg.text()
-                        .lowercase()
                         .replace(DOMAIN_IN_TELEGRAM_LINK, "")
                         .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
-                        .replace(DOMAIN_WEB_TELEGRAM_LINK, ""),
+                        .replace(DOMAIN_WEB_TELEGRAM_LINK, "")
+                        .lowercaseIfNotInviteLink(),
                     0
                 )
                 val replyButtons = InlineKeyboardMarkup()
@@ -205,6 +239,12 @@ class CreateSubscriptionService(
         }
     }
 
+    private fun String.lowercaseIfNotInviteLink() =
+        if (!this.startsWith("+"))
+            this.lowercase()
+        else
+            this
+
     companion object {
         private val logger = logger()
 
@@ -222,12 +262,13 @@ class CreateSubscriptionService(
         const val DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL = "t.me/"
         const val DOMAIN_WEB_TELEGRAM_LINK = "https://telegram.me/s/"
         const val ERROR_GROUP_FORMAT = "Неправильный формат группы. Введите еще раз"
-        const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username)"
+        const val ENTER_GROUP_NAME = "Введите ссылку на группу (${DOMAIN_IN_TELEGRAM_LINK}some_group_username) или инвайт ссылку"
         const val CHOOSE_SEARCH_PARAM = "Введите условия для поиска сообщений (несколько условий будут соединены через условие \"И\")"
         const val SUBSCRIPTION_SUCCESS = "Вы подписались"
         const val CHOOSE_ACTION = "Нажмите для продолжения"
         const val SUBSCRIPTION_CANCELED = "Отменено"
-        const val ALREADY_EXISTED_SUBSCRIPTION = "Такая подписка уже есть в"
+        const val ALREADY_EXISTED_SUBSCRIPTION = "Ошибка. Такая подписка уже есть в"
+        const val GROUP_INVALID = "Ошибка при добавлении группы. Проверьте ссылку или попробуйте позднее"
         const val ERROR_TEXT = "Произошла ошибка попробуйте еще раз"
     }
 }

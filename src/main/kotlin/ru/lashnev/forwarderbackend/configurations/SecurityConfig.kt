@@ -9,11 +9,11 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 class SecurityConfig {
-
     @Bean
-    @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http.authorizeHttpRequests { requests -> requests.anyRequest().authenticated() }.httpBasic { }
+        http.csrf { csrf -> csrf.disable() }.authorizeHttpRequests {
+            requests -> requests.anyRequest().authenticated()
+        }.httpBasic { }
         return http.build()
     }
 }

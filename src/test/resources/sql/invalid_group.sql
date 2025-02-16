@@ -1,0 +1,1 @@
+insert into groups (group_id, groupname, invalid) values (1, 'invalid_group', true);

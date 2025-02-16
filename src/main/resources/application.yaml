@@ -25,6 +25,7 @@ spring:
 
 api:
   get-message-url: http://sender:4322/get-subscription-messages
+  join-group-url: http://sender:4322/join-group
   lemmatization-url: http://lemmatizer:4355/lemmatize
   ocr-url: http://ocr:4366/image-to-text
 rest-template:

@@ -7,6 +7,18 @@ import ru.lashnev.forwarderbackend.models.Group
 
 @Repository
 class GroupsDaoImpl(private val dsl: DSLContext) : GroupsDao {
+    override fun getByName(name: String): Group? {
+        return dsl.select()
+            .from(GROUPS)
+            .where(GROUPS.GROUPNAME.eq(name))
+            .fetch()
+            .map { Group(
+                it.get(GROUPS.GROUPNAME),
+                it.get(GROUPS.LASTMESSAGEID).toLong(),
+                it.get(GROUPS.INVALID)
+            ) }.firstOrNull()
+    }
+
     override fun getValidGroups(): Set<Group> {
         return dsl.select()
             .from(GROUPS)

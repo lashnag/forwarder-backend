@@ -141,7 +141,12 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
     private fun Record.toSubscription(): Subscription {
         val groupName = this.get(GROUPS.GROUPNAME)
         val lastMessageId = this.get(GROUPS.LASTMESSAGEID)
-        val group = Group(groupName, lastMessageId ?: 0)
+        val isInvalidGroup = this.get(GROUPS.INVALID)
+        val group = Group(
+            name = groupName,
+            lastMessageId = lastMessageId ?: 0,
+            invalid = isInvalidGroup,
+        )
 
         val username = this.get(SUBSCRIBERS.USERNAME)
         val chatId = this.get(SUBSCRIBERS.CHATID)?.toLong()
