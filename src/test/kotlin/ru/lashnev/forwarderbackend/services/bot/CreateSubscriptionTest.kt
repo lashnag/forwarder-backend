@@ -23,7 +23,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class CreateSubscriptionTest : BaseIT() {
-
     @Autowired
     private lateinit var createSubscriptionService: CreateSubscriptionService
 
@@ -43,7 +42,12 @@ class CreateSubscriptionTest : BaseIT() {
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
-        assertEquals(2, savedSubscriptions.first().search.properties.keywords.size)
+        assertEquals(
+            2,
+            savedSubscriptions
+                .first()
+                .search.properties.keywords.size,
+        )
         val savedSubscribers = subscribersDao.getSubscribers()
         assertEquals(1, savedSubscribers.size)
         assertEquals(testUsername, savedSubscribers.first().username)
@@ -66,8 +70,18 @@ class CreateSubscriptionTest : BaseIT() {
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
-        assertEquals(1, savedSubscriptions.first().search.properties.keywords.size)
-        assertEquals(10000, savedSubscriptions.first().search.properties.maxMoney)
+        assertEquals(
+            1,
+            savedSubscriptions
+                .first()
+                .search.properties.keywords.size,
+        )
+        assertEquals(
+            10000,
+            savedSubscriptions
+                .first()
+                .search.properties.maxMoney,
+        )
     }
 
     @Test
@@ -93,8 +107,8 @@ class CreateSubscriptionTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(Void::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenThrow(RuntimeException("Group is invalid"))
         enterSubscribeButton(afterEnterKeywordButtons, containResponse = CreateSubscriptionService.GROUP_INVALID)
 
@@ -187,7 +201,7 @@ class CreateSubscriptionTest : BaseIT() {
         val firstChooseSearchTypeKeywordCallbackQuery = mock<CallbackQuery>()
         val firstChooseSearchTypeKeywordUpdate = mock<Update>()
         whenever(firstChooseSearchTypeKeywordUpdate.callbackQuery()).thenReturn(
-            firstChooseSearchTypeKeywordCallbackQuery
+            firstChooseSearchTypeKeywordCallbackQuery,
         )
         val firstChooseSearchTypeKeywordButton = searchTypeButtons.first().first()
         whenever(firstChooseSearchTypeKeywordCallbackQuery.data()).thenReturn(firstChooseSearchTypeKeywordButton.callbackData)
@@ -229,7 +243,10 @@ class CreateSubscriptionTest : BaseIT() {
         assertTrue((lastCall.parameters["text"] as String).contains(CreateSubscriptionService.CHOOSE_SEARCH_PARAM))
     }
 
-    private fun enterSubscribeButton(afterEnterKeyword2Buttons: Array<out Array<InlineKeyboardButton>>, containResponse: String) {
+    private fun enterSubscribeButton(
+        afterEnterKeyword2Buttons: Array<out Array<InlineKeyboardButton>>,
+        containResponse: String,
+    ) {
         val saveCallbackQuery = mock<CallbackQuery>()
         val saveUpdate = mock<Update>()
         whenever(saveUpdate.callbackQuery()).thenReturn(saveCallbackQuery)

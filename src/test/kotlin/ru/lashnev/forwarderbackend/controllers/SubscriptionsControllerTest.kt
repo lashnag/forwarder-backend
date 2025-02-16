@@ -17,7 +17,6 @@ import kotlin.test.assertEquals
 
 @AutoConfigureMockMvc
 class SubscriptionsControllerTest : BaseIT() {
-
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -28,11 +27,13 @@ class SubscriptionsControllerTest : BaseIT() {
     @Sql("/sql/subscriptions.sql")
     @WithMockUser(username = "admin")
     fun getAllSubscriptions() {
-        val responseString = mockMvc.perform(
-            get("/api/subscriptions").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk)
-            .andReturn()
-            .response.contentAsString
+        val responseString =
+            mockMvc
+                .perform(
+                    get("/api/subscriptions").accept(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
 
         val setDtoTypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
         val response = objectMapper.readValue(responseString, setDtoTypeReference)
@@ -43,11 +44,13 @@ class SubscriptionsControllerTest : BaseIT() {
     @Sql("/sql/subscriptions_v2.sql")
     @WithMockUser(username = "admin")
     fun getAllSubscriptionsWithoutV2() {
-        val responseString = mockMvc.perform(
-            get("/api/subscriptions").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk)
-            .andReturn()
-            .response.contentAsString
+        val responseString =
+            mockMvc
+                .perform(
+                    get("/api/subscriptions").accept(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
 
         val setDtoTypeReference: TypeReference<Set<SubscriptionRawDto>> = object : TypeReference<Set<SubscriptionRawDto>>() {}
         val response = objectMapper.readValue(responseString, setDtoTypeReference)
@@ -56,8 +59,9 @@ class SubscriptionsControllerTest : BaseIT() {
 
     @Test
     fun getSubscriptionsHasAuth() {
-        mockMvc.perform(
-            get("/api/subscriptions").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError)
+        mockMvc
+            .perform(
+                get("/api/subscriptions").accept(MediaType.APPLICATION_JSON),
+            ).andExpect(status().is4xxClientError)
     }
 }

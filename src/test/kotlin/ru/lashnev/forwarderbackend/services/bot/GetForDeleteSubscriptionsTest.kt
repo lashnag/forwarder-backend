@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GetForDeleteSubscriptionsTest : BaseIT() {
-
     @Autowired
     private lateinit var getForDeleteSubscriptionsService: GetForDeleteSubscriptionsService
 
@@ -44,7 +43,13 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(1, savedSubscriptions.size)
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED))
+        assertTrue(
+            captor.value
+                .entities()
+                .parameters["text"]
+                .toString()
+                .contains(GetForDeleteSubscriptionsService.DELETED),
+        )
     }
 
     @Test
@@ -55,9 +60,20 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
 
         val savedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(testUsername)
         assertEquals(2, savedSubscriptions.size)
-        assertEquals(1, savedSubscriptions.first().search.properties.keywords.size)
+        assertEquals(
+            1,
+            savedSubscriptions
+                .first()
+                .search.properties.keywords.size,
+        )
         verify(telegramBot, times(2)).execute(captor.capture())
-        assertTrue(captor.value.entities().parameters["text"].toString().contains(GetForDeleteSubscriptionsService.DELETED_SUBSCRIPTION))
+        assertTrue(
+            captor.value
+                .entities()
+                .parameters["text"]
+                .toString()
+                .contains(GetForDeleteSubscriptionsService.DELETED_SUBSCRIPTION),
+        )
     }
 
     private fun getSubscriptions(): Array<out Array<InlineKeyboardButton>> {
@@ -75,7 +91,10 @@ class GetForDeleteSubscriptionsTest : BaseIT() {
         return buttons
     }
 
-    private fun clickButton(subscriptionButtons: Array<out Array<InlineKeyboardButton>>, buttonNumber: Int) {
+    private fun clickButton(
+        subscriptionButtons: Array<out Array<InlineKeyboardButton>>,
+        buttonNumber: Int,
+    ) {
         val callbackQueryDeleteAllSubscriptions = mock<CallbackQuery>()
         val deleteAllSubscriptionsUpdate = mock<Update>()
         whenever(deleteAllSubscriptionsUpdate.callbackQuery()).thenReturn(callbackQueryDeleteAllSubscriptions)

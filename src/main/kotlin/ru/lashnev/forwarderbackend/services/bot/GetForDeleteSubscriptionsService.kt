@@ -1,5 +1,6 @@
 package ru.lashnev.forwarderbackend.services.bot
 
+import com.github.lashnag.telegrambotstarter.UpdatesService
 import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.toCommand
-import com.github.lashnag.telegrambotstarter.UpdatesService
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
@@ -16,7 +16,6 @@ class GetForDeleteSubscriptionsService(
     private val sendTextUtilService: SendTextUtilService,
     private val subscriptionDao: SubscriptionDao,
 ) : UpdatesService {
-
     override fun processUpdates(update: Update) {
         if (update.callbackQuery() != null || update.message() != null) {
             onUpdateReceived(update)
@@ -44,7 +43,7 @@ class GetForDeleteSubscriptionsService(
             subscriptions.groupBy { it.group }.forEach { (group, subscriptionsByGroup) ->
                 buttons.addRow(
                     InlineKeyboardButton("$DELETE_GROUP_BUTTON_NAME${group.name}")
-                        .callbackData("${deleteGroup.callbackData}${group.name}")
+                        .callbackData("${deleteGroup.callbackData}${group.name}"),
                 )
                 subscriptionsByGroup.forEach { subscription ->
                     val deleteButtonName = "$DELETE_SUBSCRIPTION_BUTTON_NAME ${subscription.search.properties}"
@@ -53,7 +52,9 @@ class GetForDeleteSubscriptionsService(
                     }
                     buttons.addRow(
                         InlineKeyboardButton(deleteButtonName)
-                            .callbackData("${deleteGroup.callbackData}${subscription.group.name}${deleteSubscription.callbackData}${subscription.search.searchId}")
+                            .callbackData(
+                                "${deleteGroup.callbackData}${subscription.group.name}${deleteSubscription.callbackData}${subscription.search.searchId}",
+                            ),
                     )
                 }
             }
@@ -75,7 +76,12 @@ class GetForDeleteSubscriptionsService(
     }
 
     private fun deleteSubscriptionButtonClicked(callbackQuery: CallbackQuery) {
-        val subscription = callbackQuery.data().substringAfter(deleteGroup.callbackData!!).substringBefore(deleteSubscription.callbackData!!)
+        val subscription =
+            callbackQuery
+                .data()
+                .substringAfter(
+                    deleteGroup.callbackData!!,
+                ).substringBefore(deleteSubscription.callbackData!!)
         val searchId = callbackQuery.data().substringAfter(deleteSubscription.callbackData!!)
         subscriptionDao.deleteSubscription(callbackQuery.from().username(), searchId.toInt())
         sendTextUtilService.sendText(callbackQuery.from().id(), DELETED_SUBSCRIPTION + subscription)

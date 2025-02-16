@@ -26,6 +26,12 @@ class ChangelogServiceTest : BaseIT() {
         changelogService.processUpdates(changelogUpdate)
 
         verify(telegramBot).execute(captor.capture())
-        assertTrue(captor.value.entities().parameters["text"].toString().contains("Changelog"))
+        assertTrue(
+            captor.value
+                .entities()
+                .parameters["text"]
+                .toString()
+                .contains("Changelog"),
+        )
     }
 }

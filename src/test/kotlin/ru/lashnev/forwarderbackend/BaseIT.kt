@@ -23,11 +23,9 @@ import ru.lashnev.forwarderbackend.dao.GroupsDao
 import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 
-
 @SpringBootTest
 @ActiveProfiles("test")
 class BaseIT {
-
     @Autowired
     protected lateinit var subscriptionDao: SubscriptionDao
 
@@ -61,10 +59,11 @@ class BaseIT {
         @JvmStatic
         protected val testUsername = "lashnag"
 
-        private val postgreSQLContainer = PostgreSQLContainer("postgres:latest")
-            .withDatabaseName("telegram_forwarder")
-            .withUsername("test")
-            .withPassword("test")
+        private val postgreSQLContainer =
+            PostgreSQLContainer("postgres:latest")
+                .withDatabaseName("telegram_forwarder")
+                .withUsername("test")
+                .withPassword("test")
 
         private val lemmatizerContainer = GenericContainer(DockerImageName.parse("lashnag/lemmatizer")).withExposedPorts(4355)
         private val ocrContainer = GenericContainer(DockerImageName.parse("lashnag/ocr")).withExposedPorts(4366)

@@ -7,8 +7,10 @@ import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.logger
 
 @Service
-class MailingService(private val subscribersDao: SubscribersDao, private val sendTextUtilService: SendTextUtilService) {
-
+class MailingService(
+    private val subscribersDao: SubscribersDao,
+    private val sendTextUtilService: SendTextUtilService,
+) {
     @Value("\${scheduler.antispam-delay}")
     private lateinit var antispamDelay: String
 

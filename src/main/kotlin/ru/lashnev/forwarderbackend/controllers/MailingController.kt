@@ -9,10 +9,13 @@ import ru.lashnev.forwarderbackend.services.MailingService
 
 @RestController
 @RequestMapping("/mail")
-class MailingController(private val mailingService: MailingService) {
-
+class MailingController(
+    private val mailingService: MailingService,
+) {
     @PostMapping("/all")
-    fun sendAll(@RequestBody mail: Mail) {
+    fun sendAll(
+        @RequestBody mail: Mail,
+    ) {
         mailingService.sendAll(mail.text)
     }
 }

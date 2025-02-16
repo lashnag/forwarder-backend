@@ -8,8 +8,15 @@ import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 
 @Service
-class SendTextUtilService(private val bot: TelegramBot) {
-    fun sendText(who: Long, what: String?, replyMarkup: Keyboard? = null, markdown: Boolean = false) {
+class SendTextUtilService(
+    private val bot: TelegramBot,
+) {
+    fun sendText(
+        who: Long,
+        what: String?,
+        replyMarkup: Keyboard? = null,
+        markdown: Boolean = false,
+    ) {
         logger.info("Send text: what $what, who $who")
         val messages = what?.chunked(MAX_MESSAGE_LENGTH) ?: listOf(null)
         for (message in messages) {
@@ -17,7 +24,12 @@ class SendTextUtilService(private val bot: TelegramBot) {
         }
     }
 
-    private fun sendMessageChunk(who: Long, message: String?, replyMarkup: Keyboard?, markdown: Boolean) {
+    private fun sendMessageChunk(
+        who: Long,
+        message: String?,
+        replyMarkup: Keyboard?,
+        markdown: Boolean,
+    ) {
         val messageBuilder = SendMessage(who, message)
         if (replyMarkup != null) {
             messageBuilder.replyMarkup(replyMarkup)

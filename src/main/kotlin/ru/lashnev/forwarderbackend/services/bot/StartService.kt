@@ -8,7 +8,9 @@ import ru.lashnev.forwarderbackend.models.toCommand
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 
 @Service
-class StartService(private val sendTextUtilService: SendTextUtilService) : UpdatesService {
+class StartService(
+    private val sendTextUtilService: SendTextUtilService,
+) : UpdatesService {
     override fun processUpdates(update: Update) {
         if (update.message() != null) {
             onUpdateReceived(update)
@@ -25,6 +27,8 @@ class StartService(private val sendTextUtilService: SendTextUtilService) : Updat
     }
 
     companion object {
-        val WELCOME_MESSAGE = "Добро пожаловать в бот для путешествий. Воспользуйтесь командой ${AdminCommand.CREATE_SUBSCRIPTION.commandName} для создания подписки"
+        val WELCOME_MESSAGE =
+            "Добро пожаловать в бот для путешествий. Воспользуйтесь командой " +
+                "${AdminCommand.CREATE_SUBSCRIPTION.commandName} для создания подписки"
     }
 }

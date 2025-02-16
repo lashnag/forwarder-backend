@@ -13,10 +13,14 @@ class LemmatizerClientService(
     private val apiProperties: ApiProperties,
 ) : LemmatizerService {
     @Cacheable("lemmatizationCache")
-    override fun normalize(word: String): String {
-        return restTemplate.postForEntity(apiProperties.lemmatizationUrl, Request(word), Response::class.java).body!!.lemmatized
-    }
+    override fun normalize(word: String): String =
+        restTemplate.postForEntity(apiProperties.lemmatizationUrl, Request(word), Response::class.java).body!!.lemmatized
 
-    data class Request(val word: String)
-    data class Response(val lemmatized: String)
+    data class Request(
+        val word: String,
+    )
+
+    data class Response(
+        val lemmatized: String,
+    )
 }

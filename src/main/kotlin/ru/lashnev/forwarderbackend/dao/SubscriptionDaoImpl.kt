@@ -5,53 +5,69 @@ import jakarta.transaction.Transactional
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Repository
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.*
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Searches.*
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers.*
-import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscriptions.*
-import ru.lashnev.forwarderbackend.models.*
-
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Groups.GROUPS
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Searches.SEARCHES
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscribers.SUBSCRIBERS
+import ru.lashnev.forwarderbackend.dao.jooq.public_.tables.Subscriptions.SUBSCRIPTIONS
+import ru.lashnev.forwarderbackend.models.Group
+import ru.lashnev.forwarderbackend.models.Properties
+import ru.lashnev.forwarderbackend.models.Search
+import ru.lashnev.forwarderbackend.models.Subscriber
+import ru.lashnev.forwarderbackend.models.Subscription
 
 @Repository
-class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper: ObjectMapper) : SubscriptionDao {
-
+class SubscriptionDaoImpl(
+    private val dsl: DSLContext,
+    private val objectMapper: ObjectMapper,
+) : SubscriptionDao {
     @Transactional
     override fun addSubscription(subscription: Subscription) {
-        val subscriberId = dsl.insertInto(SUBSCRIBERS)
-            .set(SUBSCRIBERS.USERNAME, subscription.subscriber.username)
-            .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
-            .onConflict(SUBSCRIBERS.USERNAME)
-            .doUpdate()
-            .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
-            .returning(SUBSCRIBERS.SUBSCRIBER_ID)
-            .fetchOne()!!
-            .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
+        val subscriberId =
+            dsl
+                .insertInto(SUBSCRIBERS)
+                .set(SUBSCRIBERS.USERNAME, subscription.subscriber.username)
+                .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
+                .onConflict(SUBSCRIBERS.USERNAME)
+                .doUpdate()
+                .set(SUBSCRIBERS.CHATID, subscription.subscriber.chatId.toString())
+                .returning(SUBSCRIBERS.SUBSCRIBER_ID)
+                .fetchOne()!!
+                .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        val existingGroupId = dsl.select(GROUPS.GROUP_ID)
-            .from(GROUPS)
-            .where(GROUPS.GROUPNAME.eq(subscription.group.name))
-            .fetchOne()
-            ?.getValue(GROUPS.GROUP_ID)
+        val existingGroupId =
+            dsl
+                .select(GROUPS.GROUP_ID)
+                .from(GROUPS)
+                .where(GROUPS.GROUPNAME.eq(subscription.group.name))
+                .fetchOne()
+                ?.getValue(GROUPS.GROUP_ID)
 
-        val groupId = existingGroupId ?: dsl.insertInto(GROUPS)
-            .set(GROUPS.GROUPNAME, subscription.group.name)
-            .returning()
-            .fetchOne()!!
-            .getValue(GROUPS.GROUP_ID)
+        val groupId =
+            existingGroupId ?: dsl
+                .insertInto(GROUPS)
+                .set(GROUPS.GROUPNAME, subscription.group.name)
+                .returning()
+                .fetchOne()!!
+                .getValue(GROUPS.GROUP_ID)
 
-        val existingSearchId = dsl.select(SEARCHES.SEARCH_ID)
-            .from(SEARCHES)
-            .where(SEARCHES.PROPERTIES.eq(objectMapper.writeValueAsString(subscription.search.properties)))
-            .fetchOne()
-            ?.getValue(SEARCHES.SEARCH_ID)
+        val existingSearchId =
+            dsl
+                .select(SEARCHES.SEARCH_ID)
+                .from(SEARCHES)
+                .where(SEARCHES.PROPERTIES.eq(objectMapper.writeValueAsString(subscription.search.properties)))
+                .fetchOne()
+                ?.getValue(SEARCHES.SEARCH_ID)
 
-        val searchId = existingSearchId ?: dsl.insertInto(SEARCHES)
-            .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties))
-            .returning()
-            .fetchOne()!!
-            .getValue(SEARCHES.SEARCH_ID)
+        val searchId =
+            existingSearchId ?: dsl
+                .insertInto(SEARCHES)
+                .set(SEARCHES.PROPERTIES, objectMapper.writeValueAsString(subscription.search.properties))
+                .returning()
+                .fetchOne()!!
+                .getValue(SEARCHES.SEARCH_ID)
 
-        dsl.insertInto(SUBSCRIPTIONS)
+        dsl
+            .insertInto(SUBSCRIPTIONS)
             .set(SUBSCRIPTIONS.GROUP_ID, groupId)
             .set(SUBSCRIPTIONS.SUBSCRIBER_ID, subscriberId)
             .set(SUBSCRIPTIONS.SEARCH_ID, searchId)
@@ -59,62 +75,85 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
     }
 
     override fun getSubscriptionsBySubscriber(subscriber: String): Set<Subscription> {
-        val subscriptions = dsl.select()
-            .from(SUBSCRIPTIONS)
-            .join(SUBSCRIBERS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
-            .join(GROUPS).on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
-            .join(SEARCHES).on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
-            .where(SUBSCRIBERS.USERNAME.eq(subscriber))
-            .fetch()
+        val subscriptions =
+            dsl
+                .select()
+                .from(SUBSCRIPTIONS)
+                .join(SUBSCRIBERS)
+                .on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
+                .join(GROUPS)
+                .on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
+                .join(SEARCHES)
+                .on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
+                .where(SUBSCRIBERS.USERNAME.eq(subscriber))
+                .fetch()
 
         return subscriptions.map { it.toSubscription() }.toSet()
     }
 
     @Transactional
     override fun deleteSubscriber(subscriber: String) {
-        val subscriberId = dsl.select()
-            .from(SUBSCRIBERS)
-            .where(SUBSCRIBERS.USERNAME.eq(subscriber))
-            .fetchOne()!!
-            .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
+        val subscriberId =
+            dsl
+                .select()
+                .from(SUBSCRIBERS)
+                .where(SUBSCRIBERS.USERNAME.eq(subscriber))
+                .fetchOne()!!
+                .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        dsl.delete(SUBSCRIPTIONS)
+        dsl
+            .delete(SUBSCRIPTIONS)
             .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
             .execute()
 
-        dsl.deleteFrom(SUBSCRIBERS)
+        dsl
+            .deleteFrom(SUBSCRIBERS)
             .where(SUBSCRIBERS.SUBSCRIBER_ID.eq(subscriberId))
     }
 
     @Transactional
-    override fun deleteSubscription(subscriber: String, group: String) {
-        val subscriberId = dsl.select()
-            .from(SUBSCRIBERS)
-            .where(SUBSCRIBERS.USERNAME.eq(subscriber))
-            .fetchOne()!!
-            .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
+    override fun deleteSubscription(
+        subscriber: String,
+        group: String,
+    ) {
+        val subscriberId =
+            dsl
+                .select()
+                .from(SUBSCRIBERS)
+                .where(SUBSCRIBERS.USERNAME.eq(subscriber))
+                .fetchOne()!!
+                .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        val groupId = dsl.select()
-            .from(GROUPS)
-            .where(GROUPS.GROUPNAME.eq(group))
-            .fetchOne()!!
-            .getValue(GROUPS.GROUP_ID)
+        val groupId =
+            dsl
+                .select()
+                .from(GROUPS)
+                .where(GROUPS.GROUPNAME.eq(group))
+                .fetchOne()!!
+                .getValue(GROUPS.GROUP_ID)
 
-        dsl.delete(SUBSCRIPTIONS)
+        dsl
+            .delete(SUBSCRIPTIONS)
             .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
             .and(SUBSCRIPTIONS.GROUP_ID.eq(groupId))
             .execute()
     }
 
     @Transactional
-    override fun deleteSubscription(subscriber: String, searchId: Int) {
-        val subscriberId = dsl.select()
-            .from(SUBSCRIBERS)
-            .where(SUBSCRIBERS.USERNAME.eq(subscriber))
-            .fetchOne()!!
-            .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
+    override fun deleteSubscription(
+        subscriber: String,
+        searchId: Int,
+    ) {
+        val subscriberId =
+            dsl
+                .select()
+                .from(SUBSCRIBERS)
+                .where(SUBSCRIBERS.USERNAME.eq(subscriber))
+                .fetchOne()!!
+                .getValue(SUBSCRIBERS.SUBSCRIBER_ID)
 
-        dsl.delete(SUBSCRIPTIONS)
+        dsl
+            .delete(SUBSCRIPTIONS)
             .where(SUBSCRIPTIONS.SUBSCRIBER_ID.eq(subscriberId))
             .and(SUBSCRIPTIONS.SEARCH_ID.eq(searchId))
             .execute()
@@ -128,12 +167,17 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
     }
 
     override fun getAll(): Set<Subscription> {
-        val subscriptions = dsl.select()
-            .from(SUBSCRIPTIONS)
-            .join(SUBSCRIBERS).on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
-            .join(GROUPS).on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
-            .join(SEARCHES).on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
-            .fetch()
+        val subscriptions =
+            dsl
+                .select()
+                .from(SUBSCRIPTIONS)
+                .join(SUBSCRIBERS)
+                .on(SUBSCRIBERS.SUBSCRIBER_ID.eq(SUBSCRIPTIONS.SUBSCRIBER_ID))
+                .join(GROUPS)
+                .on(GROUPS.GROUP_ID.eq(SUBSCRIPTIONS.GROUP_ID))
+                .join(SEARCHES)
+                .on(SEARCHES.SEARCH_ID.eq(SUBSCRIPTIONS.SEARCH_ID))
+                .fetch()
 
         return subscriptions.map { it.toSubscription() }.toSet()
     }
@@ -142,11 +186,12 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
         val groupName = this.get(GROUPS.GROUPNAME)
         val lastMessageId = this.get(GROUPS.LASTMESSAGEID)
         val isInvalidGroup = this.get(GROUPS.INVALID)
-        val group = Group(
-            name = groupName,
-            lastMessageId = lastMessageId ?: 0,
-            invalid = isInvalidGroup,
-        )
+        val group =
+            Group(
+                name = groupName,
+                lastMessageId = lastMessageId ?: 0,
+                invalid = isInvalidGroup,
+            )
 
         val username = this.get(SUBSCRIBERS.USERNAME)
         val chatId = this.get(SUBSCRIBERS.CHATID)?.toLong()
@@ -160,8 +205,7 @@ class SubscriptionDaoImpl(private val dsl: DSLContext, private val objectMapper:
         return Subscription(
             subscriber,
             group,
-            search
+            search,
         )
     }
-
 }

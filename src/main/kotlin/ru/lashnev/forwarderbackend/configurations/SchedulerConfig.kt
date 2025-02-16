@@ -7,7 +7,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 @Configuration
 class SchedulerConfig {
-
     @Value("\${scheduler.pool-size}")
     private lateinit var poolSize: String
 

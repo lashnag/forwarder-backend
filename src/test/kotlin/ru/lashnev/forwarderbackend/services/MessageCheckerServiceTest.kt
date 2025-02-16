@@ -7,7 +7,6 @@ import ru.lashnev.forwarderbackend.BaseIT
 import ru.lashnev.forwarderbackend.models.Properties
 
 class MessageCheckerServiceTest : BaseIT() {
-
     @Autowired
     private lateinit var messageCheckerService: MessageCheckerService
 

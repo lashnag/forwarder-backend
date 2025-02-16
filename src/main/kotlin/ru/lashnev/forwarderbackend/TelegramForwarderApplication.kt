@@ -9,5 +9,5 @@ import org.springframework.boot.runApplication
 class TelegramForwarderApplication
 
 fun main(args: Array<String>) {
-	runApplication<TelegramForwarderApplication>(*args)
+    runApplication<TelegramForwarderApplication>(*args)
 }

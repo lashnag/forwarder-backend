@@ -8,7 +8,6 @@ import java.util.Base64
 import kotlin.test.assertTrue
 
 class OcrClientServiceTest : BaseIT() {
-
     @Autowired
     private lateinit var ocrClientService: OcrClientService
 

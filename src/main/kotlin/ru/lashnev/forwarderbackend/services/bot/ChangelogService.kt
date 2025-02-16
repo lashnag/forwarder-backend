@@ -11,8 +11,10 @@ import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import java.nio.charset.Charset
 
 @Service
-class ChangelogService(private val sendTextUtilService: SendTextUtilService, resourceLoader: ResourceLoader) : UpdatesService {
-
+class ChangelogService(
+    private val sendTextUtilService: SendTextUtilService,
+    resourceLoader: ResourceLoader,
+) : UpdatesService {
     private var changelog: Resource = resourceLoader.getResource("classpath:changelog.md")
 
     override fun processUpdates(update: Update) {

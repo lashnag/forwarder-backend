@@ -48,8 +48,8 @@ class MessageForwarderServiceTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(MessageFetcherResponse::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenThrow(RestClientException("Server Error"))
 
         messageForwarderService.processMessages()
@@ -68,8 +68,8 @@ class MessageForwarderServiceTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(MessageFetcherResponse::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenThrow(HttpClientErrorException(HttpStatus.FORBIDDEN))
 
         messageForwarderService.processMessages()
@@ -88,17 +88,17 @@ class MessageForwarderServiceTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(MessageFetcherResponse::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
                         9L to Message("Пересылаемое сообщение 1"),
-                        10L to Message("Пересылаемое сообщение 2")
+                        10L to Message("Пересылаемое сообщение 2"),
                     ),
-                )
-            )
+                ),
+            ),
         )
         whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 
@@ -117,17 +117,17 @@ class MessageForwarderServiceTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(MessageFetcherResponse::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenReturn(
             ResponseEntity.ok(
                 MessageFetcherResponse(
                     linkedMapOf(
                         9L to Message("Пересылаемое сообщение 1"),
-                        10L to Message("Пересылаемое сообщение 2")
+                        10L to Message("Пересылаемое сообщение 2"),
                     ),
-                )
-            )
+                ),
+            ),
         )
         whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 
@@ -150,10 +150,10 @@ class MessageForwarderServiceTest : BaseIT() {
             restTemplate.getForEntity(
                 any<String>(),
                 eq(MessageFetcherResponse::class.java),
-                any<Map<String, String>>()
-            )
+                any<Map<String, String>>(),
+            ),
         ).thenReturn(
-            ResponseEntity.ok(MessageFetcherResponse(linkedMapOf(9L to Message("Пересылаемое сообщение 1"))))
+            ResponseEntity.ok(MessageFetcherResponse(linkedMapOf(9L to Message("Пересылаемое сообщение 1")))),
         )
         whenever(messageCheckerService.doesMessageFit(any<String>(), any<Properties>())).thenReturn(true)
 

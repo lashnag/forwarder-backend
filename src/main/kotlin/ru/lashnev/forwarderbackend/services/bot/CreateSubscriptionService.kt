@@ -29,7 +29,6 @@ class CreateSubscriptionService(
     private val restTemplate: RestTemplate,
     private val apiProperties: ApiProperties,
 ) : UpdatesService {
-
     val userContext: MutableMap<Long, State> = mutableMapOf()
 
     enum class ProcessStage {
@@ -37,7 +36,7 @@ class CreateSubscriptionService(
         CHOOSE_SEARCH_TYPE,
         ENTER_SEARCH_KEYWORD,
         ENTER_SEARCH_MAX_MONEY,
-        CONFIRMATION
+        CONFIRMATION,
     }
 
     data class State(
@@ -82,7 +81,8 @@ class CreateSubscriptionService(
         when (userState.stage) {
             ProcessStage.ENTER_GROUP -> groupEntered(msg)
             ProcessStage.ENTER_SEARCH_KEYWORD,
-            ProcessStage.ENTER_SEARCH_MAX_MONEY -> searchPropertyEntered(msg)
+            ProcessStage.ENTER_SEARCH_MAX_MONEY,
+            -> searchPropertyEntered(msg)
             ProcessStage.CHOOSE_SEARCH_TYPE -> TODO()
             ProcessStage.CONFIRMATION -> TODO()
         }
@@ -115,7 +115,7 @@ class CreateSubscriptionService(
             sendTextUtilService.sendText(
                 callbackQuery.from().id(),
                 CHOOSE_SEARCH_PARAM,
-                replyMarkup = replyButtons
+                replyMarkup = replyButtons,
             )
         }
     }
@@ -125,11 +125,12 @@ class CreateSubscriptionService(
             val state = checkNotNull(userContext[callbackQuery.from().id()])
             val subscription = Subscription(state.subscriber, state.group!!, state.search!!)
             val existedSubscriptions = subscriptionDao.getSubscriptionsBySubscriber(state.subscriber.username)
-            val intersectedSubscriptions = existedSubscriptions.filter {
-                it.subscriber.username == state.subscriber.username
-                    && it.group.name == state.group!!.name
-                    && it.search.properties == state.search!!.properties
-            }
+            val intersectedSubscriptions =
+                existedSubscriptions.filter {
+                    it.subscriber.username == state.subscriber.username &&
+                        it.group.name == state.group!!.name &&
+                        it.search.properties == state.search!!.properties
+                }
 
             if (intersectedSubscriptions.isEmpty()) {
                 if (isGroupValid(state.group!!.name)) {
@@ -139,7 +140,10 @@ class CreateSubscriptionService(
                     sendTextUtilService.sendText(callbackQuery.from().id(), GROUP_INVALID)
                 }
             } else {
-                sendTextUtilService.sendText(callbackQuery.from().id(), "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().group}")
+                sendTextUtilService.sendText(
+                    callbackQuery.from().id(),
+                    "$ALREADY_EXISTED_SUBSCRIPTION ${intersectedSubscriptions.first().group}",
+                )
             }
             userContext.remove(callbackQuery.from().id())
         }
@@ -152,7 +156,7 @@ class CreateSubscriptionService(
                 restTemplate.getForEntity(
                     "${apiProperties.joinGroupUrl}?subscription={subscription}",
                     Void::class.java,
-                    mapOf("subscription" to groupName)
+                    mapOf("subscription" to groupName),
                 )
                 true
             } catch (e: Exception) {
@@ -175,17 +179,22 @@ class CreateSubscriptionService(
         handleError(msg.from().id()) {
             val userState = checkNotNull(userContext[msg.from().id()])
 
-            if(msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) || msg.text().contains(
-                    DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL
-                ) || msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)) {
-                userState.group = Group(
-                    msg.text()
-                        .replace(DOMAIN_IN_TELEGRAM_LINK, "")
-                        .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
-                        .replace(DOMAIN_WEB_TELEGRAM_LINK, "")
-                        .lowercaseIfNotInviteLink(),
-                    0
-                )
+            if (msg.text().contains(DOMAIN_IN_TELEGRAM_LINK) ||
+                msg.text().contains(
+                    DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL,
+                ) ||
+                msg.text().contains(DOMAIN_WEB_TELEGRAM_LINK)
+            ) {
+                userState.group =
+                    Group(
+                        msg
+                            .text()
+                            .replace(DOMAIN_IN_TELEGRAM_LINK, "")
+                            .replace(DOMAIN_IN_TELEGRAM_LINK_WITHOUT_PROTOCOL, "")
+                            .replace(DOMAIN_WEB_TELEGRAM_LINK, "")
+                            .lowercaseIfNotInviteLink(),
+                        0,
+                    )
                 val replyButtons = InlineKeyboardMarkup()
                 replyButtons.addRow(keywordButton)
                 if (userState.search?.properties?.maxMoney == null) replyButtons.addRow(maxMoneyButton)
@@ -195,12 +204,12 @@ class CreateSubscriptionService(
                 sendTextUtilService.sendText(
                     msg.from().id(),
                     CHOOSE_SEARCH_PARAM,
-                    replyMarkup = replyButtons
+                    replyMarkup = replyButtons,
                 )
             } else {
                 sendTextUtilService.sendText(
                     msg.from().id(),
-                    ERROR_GROUP_FORMAT
+                    ERROR_GROUP_FORMAT,
                 )
             }
         }
@@ -209,10 +218,11 @@ class CreateSubscriptionService(
     private fun searchPropertyEntered(msg: Message) {
         handleError(msg.from().id()) {
             val userState = checkNotNull(userContext[msg.from().id()])
-            val properties = userState.search?.properties ?: Properties().also {
-                userState.search = Search(null, it)
-            }
-            when(userState.stage) {
+            val properties =
+                userState.search?.properties ?: Properties().also {
+                    userState.search = Search(null, it)
+                }
+            when (userState.stage) {
                 ProcessStage.ENTER_SEARCH_KEYWORD -> properties.keywords.add(msg.text().lowercase())
                 ProcessStage.ENTER_SEARCH_MAX_MONEY -> properties.maxMoney = msg.text().toLong()
                 else -> throw IllegalStateException("State is ${userState.stage}")
@@ -222,15 +232,19 @@ class CreateSubscriptionService(
             sendTextUtilService.sendText(
                 msg.from().id(),
                 CHOOSE_ACTION,
-                replyMarkup = InlineKeyboardMarkup()
-                    .addRow(moreButton)
-                    .addRow(subscribeButton)
-                    .addRow(cancelButton)
+                replyMarkup =
+                    InlineKeyboardMarkup()
+                        .addRow(moreButton)
+                        .addRow(subscribeButton)
+                        .addRow(cancelButton),
             )
         }
     }
 
-    private fun handleError(chatId: Long, block: () -> Unit) {
+    private fun handleError(
+        chatId: Long,
+        block: () -> Unit,
+    ) {
         try {
             block()
         } catch (e: Exception) {
@@ -240,10 +254,11 @@ class CreateSubscriptionService(
     }
 
     private fun String.lowercaseIfNotInviteLink() =
-        if (!this.startsWith("+"))
+        if (!this.startsWith("+")) {
             this.lowercase()
-        else
+        } else {
             this
+        }
 
     companion object {
         private val logger = logger()

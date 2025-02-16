@@ -9,7 +9,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory
 
 @Configuration
 class RestTemplateConfiguration {
-
     @Value("\${rest-template.connection-timeout}")
     private lateinit var connectionTimeout: String
 

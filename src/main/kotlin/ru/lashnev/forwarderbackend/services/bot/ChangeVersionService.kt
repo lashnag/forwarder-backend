@@ -24,12 +24,13 @@ class ChangeVersionService(
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CHANGE_VERSION_V2) {
             val subscriber = checkNotNull(subscribersDao.getSubscriber(telegramUser.username()))
-            val responseMessage = if (subscriber.chatId == null) {
-                subscribersDao.setSubscriberChatId(telegramUser.username(), telegramUser.id())
-                CHANGE_VERSION_SUCCESS
-            } else {
-                ALREADY_V2_MESSAGE
-            }
+            val responseMessage =
+                if (subscriber.chatId == null) {
+                    subscribersDao.setSubscriberChatId(telegramUser.username(), telegramUser.id())
+                    CHANGE_VERSION_SUCCESS
+                } else {
+                    ALREADY_V2_MESSAGE
+                }
             sendTextUtilService.sendText(telegramUser.id(), responseMessage)
             return
         }

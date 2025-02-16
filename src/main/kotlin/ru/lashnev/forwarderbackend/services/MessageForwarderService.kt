@@ -27,19 +27,19 @@ class MessageForwarderService(
     private val ocrService: OcrService,
     private val textUtils: TextUtils,
 ) {
-
     @Value("\${scheduler.antispam-delay}")
     private lateinit var antispamDelay: String
 
     @Scheduled(fixedDelay = 5_000, initialDelay = 100_000)
     fun processMessages() {
         logger.info("Start forwarder scheduler")
-        val groups = try {
-            groupsDao.getValidGroups()
-        } catch (e: Exception) {
-            logger.error("Cant get group: ", e)
-            return
-        }
+        val groups =
+            try {
+                groupsDao.getValidGroups()
+            } catch (e: Exception) {
+                logger.error("Cant get group: ", e)
+                return
+            }
         groups.forEach { group ->
             try {
                 logger.info("Processing group ${group.name}")
@@ -55,21 +55,29 @@ class MessageForwarderService(
         }
     }
 
-    private fun getMessagesResponse(group: Group) = checkNotNull(restTemplate.getForEntity(
-        "${apiProperties.getMessageUrl}?subscription={subscription}&last_message_id={lastMessageId}",
-        MessageFetcherResponse::class.java,
-        mapOf(
-            "subscription" to group.name,
-            "lastMessageId" to group.lastMessageId,
+    private fun getMessagesResponse(group: Group) =
+        checkNotNull(
+            restTemplate
+                .getForEntity(
+                    "${apiProperties.getMessageUrl}?subscription={subscription}&last_message_id={lastMessageId}",
+                    MessageFetcherResponse::class.java,
+                    mapOf(
+                        "subscription" to group.name,
+                        "lastMessageId" to group.lastMessageId,
+                    ),
+                ).body,
         )
-    ).body)
 
-    private fun sendMessagesByGroup(group: Group, messagesResponse: MessageFetcherResponse) {
+    private fun sendMessagesByGroup(
+        group: Group,
+        messagesResponse: MessageFetcherResponse,
+    ) {
         val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }.filterNot { it.subscriber.chatId == null }
         messagesResponse.messages.forEach { message ->
-            val imageText = message.value.image?.let {
-                ocrService.convertToText(it)
-            }
+            val imageText =
+                message.value.image?.let {
+                    ocrService.convertToText(it)
+                }
             val clearMessage = message.value.text?.let { textUtils.removeMarkdown(it) }
             val clearMessageWithImageText = ((clearMessage ?: "").plus(" ").plus(imageText ?: "")).trim()
             logger.info("Check message $clearMessageWithImageText")
@@ -79,8 +87,14 @@ class MessageForwarderService(
                 if (usersGotThisMessage.contains(chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
                 } else {
-                    if (sendIfMessageFit(subscription, clearMessageWithImageText, message.key to (clearMessage ?: "Найден в изображении")))
+                    if (sendIfMessageFit(
+                            subscription,
+                            clearMessageWithImageText,
+                            message.key to (clearMessage ?: "Найден в изображении"),
+                        )
+                    ) {
                         usersGotThisMessage.add(chatId)
+                    }
                 }
             }
         }
@@ -89,9 +103,15 @@ class MessageForwarderService(
         }
     }
 
-    private fun sendIfMessageFit(subscription: Subscription, clearMessageWithImageText: String, messageToSend: Pair<Long, String>): Boolean {
+    private fun sendIfMessageFit(
+        subscription: Subscription,
+        clearMessageWithImageText: String,
+        messageToSend: Pair<Long, String>,
+    ): Boolean {
         val chatId = checkNotNull(subscription.subscriber.chatId)
-        logger.info("Check subscriber ${subscription.subscriber.username} $chatId on group ${subscription.group.name} with search ${subscription.search.properties}")
+        logger.info(
+            "Check subscriber ${subscription.subscriber.username} $chatId on group ${subscription.group.name} with search ${subscription.search.properties}",
+        )
         try {
             if (messageCheckerService.doesMessageFit(clearMessageWithImageText, subscription.search.properties)) {
                 sendMessage(subscription.group, messageToSend, subscription)
@@ -105,10 +125,15 @@ class MessageForwarderService(
         return false
     }
 
-    private fun sendMessage(group: Group, message: Pair<Long, String>, subscription: Subscription) {
+    private fun sendMessage(
+        group: Group,
+        message: Pair<Long, String>,
+        subscription: Subscription,
+    ) {
         val chatId = checkNotNull(subscription.subscriber.chatId)
         val messageLink = "https://t.me/${group.name}/${message.first}"
-        val messageWithAdditionalData = message.second +
+        val messageWithAdditionalData =
+            message.second +
                 "\n\nПерейти к сообщению в группе ${group.name} -> $messageLink" +
                 "\nПоиск по: ${subscription.search.properties}"
         sendTextUtilService.sendText(
