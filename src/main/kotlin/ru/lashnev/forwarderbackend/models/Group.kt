@@ -5,7 +5,5 @@ data class Group(
     val lastMessageId: Long,
     val invalid: Boolean = false,
 ) {
-    fun isPrivate(): Boolean {
-        return name.startsWith("+")
-    }
+    fun isPrivate(): Boolean = name.startsWith("+")
 }
