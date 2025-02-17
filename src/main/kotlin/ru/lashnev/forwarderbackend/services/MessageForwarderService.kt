@@ -131,7 +131,11 @@ class MessageForwarderService(
         subscription: Subscription,
     ) {
         val chatId = checkNotNull(subscription.subscriber.chatId)
-        val messageLink = "https://t.me/${group.name}/${message.first}"
+        val messageLink = if (group.isPrivate()) {
+            "https://t.me/${group.name}"
+        } else {
+            "https://t.me/${group.name}/${message.first}"
+        }
         val messageWithAdditionalData =
             message.second +
                 "\n\nПерейти к сообщению в группе ${group.name} -> $messageLink" +
