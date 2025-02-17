@@ -19,4 +19,4 @@ api:
   ocr-url: http://127.0.0.1:4366/image-to-text
 telegram-bot-starter:
   bot:
-    token: 7990515025:AAHo9MyYefC6mVmoykCSs40asp-vp8Bdk9c
+    token: test_bot_token
