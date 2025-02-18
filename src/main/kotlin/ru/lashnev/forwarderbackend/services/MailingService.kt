@@ -31,10 +31,10 @@ class MailingService(
                 logger.info("Send to subscriber ${subscriber.username}")
                 val chatId = checkNotNull(subscriber.chatId)
                 sendTextUtilService.sendText(chatId, mail.text)
-                Thread.sleep(antispamDelay.toLong())
             } catch (e: Exception) {
                 logger.error("Cant send mail to user", e)
             }
+            Thread.sleep(antispamDelay.toLong())
         }
 
         logger.info("End mailing")

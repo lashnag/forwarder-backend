@@ -16,7 +16,7 @@ import ru.lashnev.forwarderbackend.dto.SubscriptionRawDto
 import kotlin.test.assertEquals
 
 @AutoConfigureMockMvc
-class SubscriptionsControllerTest : BaseIT() {
+class SubscriptionsV1ControllerTest : BaseIT() {
     @Autowired
     private lateinit var mockMvc: MockMvc
 

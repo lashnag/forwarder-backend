@@ -1,19 +1,14 @@
-package ru.lashnev.forwarderbackend.controllers
+package ru.lashnev.forwarderbackend.services
 
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.dto.SubscriptionRawDto
-import ru.lashnev.forwarderbackend.services.SubscriptionExportService
 
-@RestController
-@RequestMapping("/api/subscriptions")
-class SubscriptionsController(
+@Service
+class SubscriptionsV1Service(
     private val subscriptionExportService: SubscriptionExportService,
     private val subscribersDao: SubscribersDao,
 ) {
-    @GetMapping
     fun getAllSubscriptions(): Set<SubscriptionRawDto> {
         val allSubscribers = subscribersDao.getSubscribers()
         val allSubscriptions = subscriptionExportService.getAllSubscriptions()
