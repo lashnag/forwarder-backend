@@ -28,7 +28,7 @@ class StartService(
 
     companion object {
         val WELCOME_MESSAGE =
-            "Добро пожаловать в бот для путешествий. Воспользуйтесь командой " +
-                "${AdminCommand.CREATE_SUBSCRIPTION.commandName} для создания подписки"
+            "Добро пожаловать в бот для поиска сообщений в группах. Воспользуйтесь командой " +
+                "${AdminCommand.CREATE_SUBSCRIPTION.commandName} для создания подписки и обязательно рекомендуйте его друзьям"
     }
 }

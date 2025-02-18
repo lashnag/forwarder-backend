@@ -1,5 +1,6 @@
 package ru.lashnev.forwarderbackend
 
+import com.github.lashnag.telegrambotstarter.UpdatesScheduler
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.User
 import com.pengrad.telegrambot.request.SendMessage
@@ -37,6 +38,9 @@ class BaseIT {
 
     @MockBean
     protected lateinit var telegramBot: TelegramBot
+
+    @MockBean
+    protected lateinit var updatesScheduler: UpdatesScheduler
 
     protected val user = mock<User>()
     protected val captor: ArgumentCaptor<SendMessage> = ArgumentCaptor.forClass(SendMessage::class.java)

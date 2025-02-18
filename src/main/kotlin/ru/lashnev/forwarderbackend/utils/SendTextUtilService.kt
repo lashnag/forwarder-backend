@@ -49,6 +49,6 @@ class SendTextUtilService(
 
     companion object {
         private val logger = logger()
-        private const val MAX_MESSAGE_LENGTH = 4000
+        const val MAX_MESSAGE_LENGTH = 4000
     }
 }
