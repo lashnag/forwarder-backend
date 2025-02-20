@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.lashnev.forwarderbackend.dto.Mail
 import ru.lashnev.forwarderbackend.services.MailingService
+import ru.lashnev.forwarderbackend.utils.withMDC
 
 @RestController
 @RequestMapping("/mail")
@@ -16,6 +17,6 @@ class MailingController(
     fun sendAll(
         @RequestBody mail: Mail,
     ) {
-        mailingService.send(mail)
+        withMDC { mailingService.send(mail) }
     }
 }

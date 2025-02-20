@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscriptionDao
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.toCommand
+import ru.lashnev.forwarderbackend.utils.MDCType
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
+import ru.lashnev.forwarderbackend.utils.withMDC
 
 @Service
 class GetForDeleteSubscriptionsService(
@@ -18,7 +20,14 @@ class GetForDeleteSubscriptionsService(
 ) : UpdatesService {
     override fun processUpdates(update: Update) {
         if (update.callbackQuery() != null || update.message() != null) {
-            onUpdateReceived(update)
+            val telegramUserName = when {
+                update.callbackQuery() != null -> update.callbackQuery().from().username()
+                update.message() != null -> update.message().from().username()
+                else -> throw IllegalStateException("User name must be provided")
+            }
+            withMDC {
+                withMDC(MDCType.USER, telegramUserName) { onUpdateReceived(update) }
+            }
         }
     }
 

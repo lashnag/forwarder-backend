@@ -18,8 +18,10 @@ import ru.lashnev.forwarderbackend.models.Search
 import ru.lashnev.forwarderbackend.models.Subscriber
 import ru.lashnev.forwarderbackend.models.Subscription
 import ru.lashnev.forwarderbackend.models.toCommand
+import ru.lashnev.forwarderbackend.utils.MDCType
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.logger
+import ru.lashnev.forwarderbackend.utils.withMDC
 
 @Service
 class CreateSubscriptionService(
@@ -48,7 +50,14 @@ class CreateSubscriptionService(
 
     override fun processUpdates(update: Update) {
         if (update.callbackQuery() != null || update.message() != null) {
-            onUpdateReceived(update)
+            val telegramUserName = when {
+                update.callbackQuery() != null -> update.callbackQuery().from().username()
+                update.message() != null -> update.message().from().username()
+                else -> throw IllegalStateException("User name must be provided")
+            }
+            withMDC {
+                withMDC(MDCType.USER, telegramUserName) { onUpdateReceived(update) }
+            }
         }
     }
 
@@ -153,10 +162,10 @@ class CreateSubscriptionService(
         val group = groupsDao.getByName(groupName)
         return if (group == null) {
             try {
-                restTemplate.getForEntity(
-                    "${apiProperties.joinGroupUrl}?subscription={subscription}",
+                restTemplate.postForEntity(
+                    apiProperties.joinGroupUrl.replace("{subscription}", groupName),
+                    null,
                     Void::class.java,
-                    mapOf("subscription" to groupName),
                 )
                 true
             } catch (e: Exception) {

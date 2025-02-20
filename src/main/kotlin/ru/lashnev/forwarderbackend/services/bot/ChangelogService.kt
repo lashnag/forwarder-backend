@@ -7,7 +7,9 @@ import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.toCommand
+import ru.lashnev.forwarderbackend.utils.MDCType
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
+import ru.lashnev.forwarderbackend.utils.withMDC
 import java.nio.charset.Charset
 
 @Service
@@ -19,7 +21,10 @@ class ChangelogService(
 
     override fun processUpdates(update: Update) {
         if (update.message() != null) {
-            onUpdateReceived(update)
+            val telegramUserName = update.message().from().username()
+            withMDC {
+                withMDC(MDCType.USER, telegramUserName) { onUpdateReceived(update) }
+            }
         }
     }
 
@@ -27,7 +32,11 @@ class ChangelogService(
         val msg = update.message()
         val telegramUser = update.message().from()
         if (msg.text().toCommand() == AdminCommand.CHANGELOG) {
-            sendTextUtilService.sendText(telegramUser.id(), changelog.getContentAsString(Charset.defaultCharset()), markdown = true)
+            sendTextUtilService.sendText(
+                telegramUser.id(),
+                changelog.getContentAsString(Charset.defaultCharset()),
+                markdown = true
+            )
             return
         }
     }

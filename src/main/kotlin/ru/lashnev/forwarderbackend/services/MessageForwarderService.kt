@@ -12,9 +12,11 @@ import ru.lashnev.forwarderbackend.dto.MessageFetcherResponse
 import ru.lashnev.forwarderbackend.exceptions.UserBlockedException
 import ru.lashnev.forwarderbackend.models.Group
 import ru.lashnev.forwarderbackend.models.Subscription
+import ru.lashnev.forwarderbackend.utils.MDCType
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
 import ru.lashnev.forwarderbackend.utils.TextUtils
 import ru.lashnev.forwarderbackend.utils.logger
+import ru.lashnev.forwarderbackend.utils.withMDC
 
 @Service
 class MessageForwarderService(
@@ -32,6 +34,10 @@ class MessageForwarderService(
 
     @Scheduled(fixedDelay = 5_000, initialDelay = 100_000)
     fun processMessages() {
+        withMDC { internalProcessMessages() }
+    }
+
+    private fun internalProcessMessages() {
         logger.info("Start forwarder scheduler")
         val groups =
             try {
@@ -41,17 +47,21 @@ class MessageForwarderService(
                 return
             }
         groups.forEach { group ->
-            try {
-                logger.info("Processing group ${group.name}")
-                val messagesResponse = getMessagesResponse(group)
-                sendMessagesByGroup(group, messagesResponse)
-                Thread.sleep(antispamDelay.toLong())
-            } catch (e: HttpClientErrorException) {
-                logger.error("Blocked group ${group.name}", e)
-                groupsDao.setGroupInvalid(group.name)
-            } catch (e: Exception) {
-                logger.error(e.message, e)
-            }
+            withMDC(MDCType.GROUP, group.name) { processGroupMessages(group) }
+        }
+    }
+
+    private fun processGroupMessages(group: Group) {
+        try {
+            logger.info("Processing group ${group.name}")
+            val messagesResponse = getMessagesResponse(group)
+            sendMessagesByGroup(group, messagesResponse)
+            Thread.sleep(antispamDelay.toLong())
+        } catch (e: HttpClientErrorException) {
+            logger.error("Blocked group ${group.name}", e)
+            groupsDao.setGroupInvalid(group.name)
+        } catch (e: Exception) {
+            logger.error(e.message, e)
         }
     }
 
@@ -59,7 +69,7 @@ class MessageForwarderService(
         checkNotNull(
             restTemplate
                 .getForEntity(
-                    "${apiProperties.getMessageUrl}?subscription={subscription}&last_message_id={lastMessageId}",
+                    "${apiProperties.getMessageUrl}?last_message_id={lastMessageId}",
                     MessageFetcherResponse::class.java,
                     mapOf(
                         "subscription" to group.name,
@@ -74,15 +84,27 @@ class MessageForwarderService(
     ) {
         val subscriptions = subscriptionDao.getAll().filter { it.group.name == group.name }.filterNot { it.subscriber.chatId == null }
         messagesResponse.messages.forEach { message ->
-            val imageText =
-                message.value.image?.let {
-                    ocrService.convertToText(it)
-                }
-            val clearMessage = message.value.text?.let { textUtils.removeMarkdown(it) }
-            val clearMessageWithImageText = ((clearMessage ?: "").plus(" ").plus(imageText ?: "")).trim()
-            logger.info("Check message $clearMessageWithImageText")
-            val usersGotThisMessage = mutableSetOf<Long>()
-            subscriptions.forEach { subscription ->
+            withMDC(MDCType.MESSAGE_ID, message.key.toString()) { processMessage(message, subscriptions) }
+        }
+        messagesResponse.messages.keys.maxOrNull()?.let { lastMessageId ->
+            groupsDao.setLastGroupMessage(group.name, lastMessageId)
+        }
+    }
+
+    private fun processMessage(
+        message: Map.Entry<Long, MessageFetcherResponse.Message>,
+        subscriptions: List<Subscription>
+    ) {
+        val imageText =
+            message.value.image?.let {
+                ocrService.convertToText(it)
+            }
+        val clearMessage = message.value.text?.let { textUtils.removeMarkdown(it) }
+        val clearMessageWithImageText = ((clearMessage ?: "").plus(" ").plus(imageText ?: "")).trim()
+        logger.info("Check message $clearMessageWithImageText")
+        val usersGotThisMessage = mutableSetOf<Long>()
+        subscriptions.forEach { subscription ->
+            withMDC(MDCType.USER, subscription.subscriber.username) {
                 val chatId = checkNotNull(subscription.subscriber.chatId)
                 if (usersGotThisMessage.contains(chatId)) {
                     logger.info("Subscriber ${subscription.subscriber.username} already got message.")
@@ -97,9 +119,6 @@ class MessageForwarderService(
                     }
                 }
             }
-        }
-        messagesResponse.messages.keys.maxOrNull()?.let { lastMessageId ->
-            groupsDao.setLastGroupMessage(group.name, lastMessageId)
         }
     }
 

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service
 import ru.lashnev.forwarderbackend.dao.SubscribersDao
 import ru.lashnev.forwarderbackend.models.AdminCommand
 import ru.lashnev.forwarderbackend.models.toCommand
+import ru.lashnev.forwarderbackend.utils.MDCType
 import ru.lashnev.forwarderbackend.utils.SendTextUtilService
+import ru.lashnev.forwarderbackend.utils.withMDC
 
 @Service
 class ChangeVersionService(
@@ -15,7 +17,10 @@ class ChangeVersionService(
 ) : UpdatesService {
     override fun processUpdates(update: Update) {
         if (update.message() != null) {
-            onUpdateReceived(update)
+            val telegramUserName = update.message().from().username()
+            withMDC {
+                withMDC(MDCType.USER, telegramUserName) { onUpdateReceived(update) }
+            }
         }
     }
 

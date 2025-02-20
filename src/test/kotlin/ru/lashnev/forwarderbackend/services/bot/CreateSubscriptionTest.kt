@@ -7,6 +7,7 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -104,10 +105,10 @@ class CreateSubscriptionTest : BaseIT() {
         chooseSearchByKeyword(searchTypeButtons)
         val afterEnterKeywordButtons = enterKeyword(KEYWORD_1)
         whenever(
-            restTemplate.getForEntity(
+            restTemplate.postForEntity(
                 any<String>(),
+                anyOrNull(),
                 eq(Void::class.java),
-                any<Map<String, String>>(),
             ),
         ).thenThrow(RuntimeException("Group is invalid"))
         enterSubscribeButton(afterEnterKeywordButtons, containResponse = CreateSubscriptionService.GROUP_INVALID)
